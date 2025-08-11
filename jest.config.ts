@@ -4,6 +4,9 @@
  */
 
 import type {Config} from "jest";
+import {createDefaultPreset} from "ts-jest";
+
+const tsJestPreset = createDefaultPreset();
 
 const config: Config = {
   // All imported modules in your tests should be mocked automatically
@@ -177,7 +180,8 @@ const config: Config = {
   // testRunner: "jest-circus/runner",
 
   // A map from regular expressions to paths to transformers
-  // transform: undefined,
+  // @ts-expect-error - ts-jest is not typed
+  transform: {...tsJestPreset},
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [
