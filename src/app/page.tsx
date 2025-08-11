@@ -56,7 +56,9 @@ export default function Home() {
           </div>
           <div className="p-6 border border-gray-800 rounded-lg">
             <h3 className="text-xl font-semibold mb-2">Fast & Reliable</h3>
-            <p className="text-gray-400">Powered by Cloudflare R2 for global performance and reliability.</p>
+            <p className="text-gray-400">
+              Powered by Cloudflare R2 for global performance and reliability.
+            </p>
           </div>
         </section>
 

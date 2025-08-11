@@ -1,5 +1,4 @@
 export default function SettingsPage() {
-
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="flex">

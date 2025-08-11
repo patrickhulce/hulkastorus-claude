@@ -3,7 +3,7 @@
 import {useState} from "react";
 
 export default function FileManagerPage() {
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFile] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 

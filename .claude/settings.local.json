@@ -5,7 +5,10 @@
       "Bash(mkdir:*)",
       "Bash(mv:*)",
       "Bash(rmdir:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npx prettier:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx playwright test:*)"
     ],
     "deny": []
   }

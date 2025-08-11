@@ -1,18 +1,23 @@
+import Link from "next/link";
+
 export default function DocsPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <nav className="flex justify-between items-center px-8 py-4 border-b border-gray-800">
-        <div className="text-xl font-bold">Hulkastorus</div>
+        <Link href="/" className="text-xl font-bold hover:text-gray-300">
+          Hulkastorus
+        </Link>
         <div className="flex gap-6 items-center">
-          <a href="/docs" className="hover:text-gray-300">
+          <Link href="/docs" className="hover:text-gray-300">
             Docs
-          </a>
+          </Link>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/#pricing" className="hover:text-gray-300">
             Pricing
           </a>
-          <a href="/login" className="hover:text-gray-300">
+          <Link href="/login" className="hover:text-gray-300">
             Login
-          </a>
+          </Link>
           <a
             href="mailto:invites@hulkastor.us"
             className="bg-white text-black px-4 py-2 rounded-md hover:bg-gray-200"
@@ -43,7 +48,8 @@ export default function DocsPage() {
           <section id="getting-started" className="mb-16">
             <h2 className="text-2xl font-semibold mb-4">Getting Started</h2>
             <p className="text-gray-300 mb-4">
-              Welcome to Hulkastorus! Get up and running in minutes with our simple file storage service.
+              Welcome to Hulkastorus! Get up and running in minutes with our simple file storage
+              service.
             </p>
             <div className="bg-gray-900 p-4 rounded-lg mb-4">
               <code className="text-green-400">npm install @hulkastorus/client</code>

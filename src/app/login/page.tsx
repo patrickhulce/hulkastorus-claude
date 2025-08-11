@@ -51,7 +51,7 @@ export default function LoginPage() {
             {!showForgotPassword && (
               <div>
                 <a href="/register" className="text-gray-400 hover:text-white text-sm">
-                  Don't have an account? Register
+                  Don&apos;t have an account? Register
                 </a>
               </div>
             )}
