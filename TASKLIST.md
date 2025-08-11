@@ -7,7 +7,7 @@
     - [x] Add jest configuration
     - [ ] Add placeholder pages for all pages in the app
     - [x] Implement API-level test suite harness
-    - [ ] Implement basic e2e test harness with playwright
+    - [x] Implement basic e2e test harness with playwright
     - [ ] Add GitHub Actions workflow for CI/CD
     - [ ] Implement homepage
     - [ ] Implement app shell UI layout (dummy content for now)
