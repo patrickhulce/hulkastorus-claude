@@ -10,7 +10,8 @@
     "test:lint": "next lint",
     "test:format": "prettier --check .",
     "test:typecheck": "tsc --noEmit",
-    "test:unit": "jest"
+    "test:unit": "jest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -26,6 +27,7 @@
     "@babel/preset-env": "^7.28.0",
     "@babel/preset-typescript": "^7.27.1",
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.54.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.4",
@@ -43,8 +45,9 @@
     "next-test-api-route-handler": "^5.0.0",
     "prettier": "^3.6.2",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
     "tw-animate-css": "^1.3.6",
-    "typescript": "^5"
+    "typescript": "^5.9.2"
   }
 }
