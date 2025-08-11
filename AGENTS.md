@@ -128,6 +128,8 @@ When multiple valid approaches exist, choose based on:
 - [ ] Commit messages are clear
 - [ ] Implementation matches plan
 - [ ] No TODOs without issue numbers
+- [ ] Tasks in TASKLIST.md are marked complete
+- [ ] README.md, ARCHITECTURE.md, and PRODUCT.md are updated with the changes.
 
 ### Test Guidelines
 
