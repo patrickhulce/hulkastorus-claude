@@ -1,16 +1,16 @@
-- [ ] Boilerplate
+- [x] Boilerplate
     - [x] Create a new GitHub repository for the project
     - [x] Initialize a new NextJS project with Shadcn/UI and Tailwind CSS
     - [x] Initialize Tailwind CSS theme with brand colors
     - [x] Add typescript configuration
     - [x] Add eslint and prettier configuration
     - [x] Add jest configuration
-    - [ ] Add placeholder pages for all pages in the app
+    - [x] Add placeholder pages for all pages in the app
     - [x] Implement API-level test suite harness
     - [x] Implement basic e2e test harness with playwright
-    - [ ] Add GitHub Actions workflow for CI/CD
-    - [ ] Implement homepage
-    - [ ] Implement app shell UI layout (dummy content for now)
+    - [x] Add GitHub Actions workflow for CI/CD
+    - [x] Implement homepage
+    - [x] Implement app shell UI layout (dummy content for now)
 - [ ] User Functionality (Basic)
     - [ ] Create Neon database
     - [ ] Add Prisma configuration with a basic user model
