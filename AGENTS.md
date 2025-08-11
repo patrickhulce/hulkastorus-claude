@@ -24,11 +24,13 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
 
 ```markdown
 ## Stage N: [Name]
+
 **Goal**: [Specific deliverable]
 **Success Criteria**: [Testable outcomes]
 **Tests**: [Specific test cases]
 **Status**: [Not Started|In Progress|Complete]
 ```
+
 - Update status as you progress
 - Remove file when all stages are done
 
@@ -160,12 +162,14 @@ Some common examples are found below:
 ## Important Reminders
 
 **NEVER**:
+
 - Use `--no-verify` to bypass commit hooks
 - Disable tests instead of fixing them
 - Commit code that doesn't compile
 - Make assumptions - verify with existing code
 
 **ALWAYS**:
+
 - Commit working code incrementally
 - Update plan documentation as you go
 - Learn from existing implementations
