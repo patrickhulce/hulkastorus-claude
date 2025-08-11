@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id
+  email            String    @unique
+  password         String
+  firstName        String    @map("first_name")
+  lastName         String    @map("last_name")
+  inviteCode       String    @map("invite_code")
+  isEmailVerified  Boolean   @default(false) @map("is_email_verified")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  
+  directories      Directory[]
+  files            File[]
+  apiKeys          ApiKey[]
+  
+  @@map("users")
+}
+
+model Directory {
+  id                      String    @id
+  userId                  String    @map("user_id")
+  parentId                String?   @map("parent_id")
+  fullPath                String    @map("full_path")
+  defaultExpirationPolicy String    @default("infinite") @map("default_expiration_policy")
+  defaultPermissions      String    @default("private") @map("default_permissions")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+  
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent                  Directory? @relation("DirectoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children                Directory[] @relation("DirectoryHierarchy")
+  files                   File[]
+  
+  @@map("directories")
+}
+
+model File {
+  id                String    @id
+  userId            String    @map("user_id")
+  directoryId       String    @map("directory_id")
+  status            String    @default("reserved")
+  r2Locator         String?   @map("r2_locator")
+  expirationPolicy  String    @default("infinite") @map("expiration_policy")
+  fullPath          String    @map("full_path")
+  filename          String
+  mimeType          String?   @map("mime_type")
+  sizeBytes         BigInt?   @map("size_bytes")
+  permissions       String    @default("private")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  expiresAt         DateTime? @map("expires_at")
+  
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  directory         Directory @relation(fields: [directoryId], references: [id], onDelete: Cascade)
+  
+  @@map("files")
+}
+
+model ApiKey {
+  id          String    @id
+  userId      String    @map("user_id")
+  label       String
+  key         String    @unique
+  permissions String    @default("read")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("api_keys")
+}
