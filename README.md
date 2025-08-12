@@ -1,24 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hulkastorus
+
+Developer-focused cloud storage service that turns a drag-and-drop or single `curl` command into an immediately usable public URL.
+
+This is a [Next.js](https://nextjs.org) project implementing the architecture defined in [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+## Features
+
+- **NextAuth Authentication** - JWT-based auth with protected routes
+- **Cloudflare R2 Integration** - S3-compatible object storage with mock server for testing
+- **Prisma ORM** - Type-safe database operations with PostgreSQL
+- **Comprehensive Testing** - Unit tests, E2E tests with Playwright, and mock services
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+
+- PostgreSQL database (or use Neon)
+- Cloudflare R2 account (optional for development)
+
+### Environment Setup
+
+1. Copy the environment template:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3010](http://localhost:3010) with your browser to see the result.
+2. Configure your environment variables:
+```bash
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/hulkastorus"
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# NextAuth
+NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_URL="http://localhost:3000"
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Cloudflare R2 (optional for development)
+R2_ACCOUNT_ID="your-r2-account-id"
+R2_ACCESS_KEY_ID="your-r2-access-key-id"
+R2_SECRET_ACCESS_KEY="your-r2-secret-access-key"
+R2_BUCKET_NAME="hulkastorus-ugc"
+```
+
+### Development
+
+1. Install dependencies:
+```bash
+pnpm install
+```
+
+2. Set up the database:
+```bash
+npx prisma migrate dev
+```
+
+3. Start the development server:
+```bash
+pnpm dev
+```
+
+4. Open [http://localhost:3010](http://localhost:3010) to view the application.
+
+## Testing
+
+### Run All Tests
+```bash
+pnpm test
+```
+
+### Test Categories
+```bash
+# Unit tests only
+pnpm run test:unit
+
+# E2E tests with Playwright
+npx playwright test
+
+# R2 integration tests
+npx playwright test tests/e2e/r2-integration.test.ts
+
+# Lint and format
+pnpm run test:lint
+pnpm run test:format
+```
+
+### R2 Testing
+
+The project includes a mock R2 server for testing S3-compatible operations without requiring actual Cloudflare R2 credentials. See [docs/R2_TESTING.md](./docs/R2_TESTING.md) for detailed testing instructions.
 
 ## Learn More
 

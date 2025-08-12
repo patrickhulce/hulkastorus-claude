@@ -11,15 +11,15 @@
     - [x] Add GitHub Actions workflow for CI/CD
     - [x] Implement homepage
     - [x] Implement app shell UI layout (dummy content for now)
-- [ ] User Functionality (Basic)
+- [x] User Functionality (Basic)
     - [x] Create Neon database
     - [x] Add Prisma configuration with a basic user model
     - [x] Implement barebones user creation/deletion API routes (unprotected, no validation, no email verification)
     - [x] Implement /register, /login, /logout pages
     - [x] Add NextAuth configuration and protect existing pages/routes
 - [ ] Core Functionality (Basic)
-    - [ ] Create mock R2 server for testing
-    - [ ] Create R2 bucket
+    - [x] Create mock R2 server for testing
+    - [x] Create R2 bucket
     - [ ] Implement file upload, download API routes + public download route
     - [ ] Implement file upload UI on dashboard
     - [ ] Implement remainder of file+directory management routes
