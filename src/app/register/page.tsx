@@ -43,7 +43,7 @@ export default function RegisterPage() {
       const [firstName, ...lastNameParts] = formData.fullName.split(" ");
       const lastName = lastNameParts.join(" ");
 
-      const response = await fetch("/api/v1/users", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

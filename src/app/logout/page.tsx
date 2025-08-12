@@ -1,22 +1,14 @@
 "use client";
 
 import {useEffect} from "react";
-import {useRouter} from "next/navigation";
+import {signOut} from "next-auth/react";
 
 export default function LogoutPage() {
-  const router = useRouter();
-
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user");
-    }
-
-    const timer = setTimeout(() => {
-      router.push("/login");
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [router]);
+    signOut({
+      callbackUrl: "/login",
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center">

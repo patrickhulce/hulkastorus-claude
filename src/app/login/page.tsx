@@ -2,6 +2,7 @@
 
 import {useState, useEffect} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
+import {signIn} from "next-auth/react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -19,6 +20,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (searchParams.get("registered") === "true") {
       setSuccess("Registration successful! Please login with your credentials.");
+    }
+    if (searchParams.get("error")) {
+      setError("Invalid email or password");
     }
   }, [searchParams]);
 
@@ -47,11 +51,18 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("user", JSON.stringify({email: formData.email}));
-      }
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
 
-      router.push("/dashboard");
+      if (result?.error) {
+        setError("Invalid email or password");
+      } else {
+        router.push("/dashboard");
+        router.refresh();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

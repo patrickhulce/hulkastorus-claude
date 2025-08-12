@@ -15,8 +15,8 @@
     - [x] Create Neon database
     - [x] Add Prisma configuration with a basic user model
     - [x] Implement barebones user creation/deletion API routes (unprotected, no validation, no email verification)
-    - [ ] Implement /register, /login, /logout pages
-    - [ ] Add NextAuth configuration and protect existing pages/routes
+    - [x] Implement /register, /login, /logout pages
+    - [x] Add NextAuth configuration and protect existing pages/routes
 - [ ] Core Functionality (Basic)
     - [ ] Create mock R2 server for testing
     - [ ] Create R2 bucket
