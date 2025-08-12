@@ -1,27 +1,66 @@
 "use client";
 
 import {useState} from "react";
+import {useSession, signOut} from "next-auth/react";
+import {useRouter} from "next/navigation";
+import Link from "next/link";
 
 export default function DashboardPage() {
+  const {data: session, status} = useSession();
+  const router = useRouter();
   const [showUploadModal, setShowUploadModal] = useState(false);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    router.push("/login");
+    return null;
+  }
+
+  const handleLogout = async () => {
+    await signOut({callbackUrl: "/login"});
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="flex">
         <aside className="w-64 border-r border-gray-800 min-h-screen">
           <div className="p-6">
-            <div className="text-xl font-bold mb-8">Hulkastorus</div>
-            <nav className="space-y-2">
-              <a href="/app/dashboard" className="block py-2 px-3 rounded bg-gray-900">
+            <div className="text-xl font-bold mb-4">Hulkastorus</div>
+
+            {/* User info */}
+            <div className="mb-6 p-3 bg-gray-900 rounded-lg">
+              <div className="text-sm text-gray-400">Logged in as:</div>
+              <div className="text-sm font-medium">{session?.user?.email}</div>
+              {session?.user?.name && (
+                <div className="text-xs text-gray-400">{session.user.name}</div>
+              )}
+            </div>
+
+            <nav className="space-y-2 mb-6">
+              <Link href="/app/dashboard" className="block py-2 px-3 rounded bg-gray-900">
                 Dashboard
-              </a>
-              <a href="/app/browse" className="block py-2 px-3 rounded hover:bg-gray-900">
+              </Link>
+              <Link href="/app/browse" className="block py-2 px-3 rounded hover:bg-gray-900">
                 File Manager
-              </a>
-              <a href="/app/settings" className="block py-2 px-3 rounded hover:bg-gray-900">
+              </Link>
+              <Link href="/app/settings" className="block py-2 px-3 rounded hover:bg-gray-900">
                 Settings
-              </a>
+              </Link>
             </nav>
+
+            <button
+              onClick={handleLogout}
+              className="w-full py-2 px-3 text-left rounded hover:bg-gray-900 text-gray-400 hover:text-white"
+            >
+              Logout
+            </button>
           </div>
         </aside>
 
@@ -108,12 +147,12 @@ export default function DashboardPage() {
       <footer className="border-t border-gray-800 py-8">
         <div className="container mx-auto px-8 flex justify-center gap-8 text-gray-400">
           <span>© 2024 Hulkastorus</span>
-          <a href="/privacy" className="hover:text-white">
+          <Link href="/privacy" className="hover:text-white">
             Privacy
-          </a>
-          <a href="/terms" className="hover:text-white">
+          </Link>
+          <Link href="/terms" className="hover:text-white">
             Terms
-          </a>
+          </Link>
         </div>
       </footer>
     </div>

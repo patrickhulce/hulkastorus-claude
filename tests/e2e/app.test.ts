@@ -5,20 +5,20 @@ test.describe("App Pages", () => {
   test("dashboard page loads correctly", async ({page}) => {
     // Login first since dashboard is protected
     await loginUser(page);
-    await page.goto("/dashboard");
+    await page.goto("/app/dashboard");
 
     // Check page title
     await expect(page).toHaveTitle(/Hulkastorus/);
 
     // Check main content
-    await expect(page.getByRole("heading", {name: "Dashboard"})).toBeVisible();
-    await expect(page.getByText("Welcome back!")).toBeVisible();
-    await expect(page.getByRole("link", {name: "Logout"})).toBeVisible();
+    await expect(page.getByRole("heading", {name: "Welcome to Hulkastorus"})).toBeVisible();
+    await expect(page.getByText("Drag files here or click to browse")).toBeVisible();
+    await expect(page.getByRole("button", {name: "Logout"})).toBeVisible();
 
-    // Check placeholder cards
-    await expect(page.getByRole("heading", {name: "Files"})).toBeVisible();
-    await expect(page.getByRole("heading", {name: "Storage"})).toBeVisible();
-    await expect(page.getByRole("heading", {name: "API Keys"})).toBeVisible();
+    // Check dashboard stats cards
+    await expect(page.getByRole("heading", {name: "Total Files"})).toBeVisible();
+    await expect(page.getByRole("heading", {name: "Storage Used"})).toBeVisible();
+    await expect(page.getByRole("heading", {name: "Recent Uploads"})).toBeVisible();
   });
 
   test.skip("file manager page loads correctly", async ({page}) => {
@@ -74,7 +74,7 @@ test.describe("App Pages", () => {
   test.skip("upload modal functionality", async ({page}) => {
     // Login first since dashboard is protected
     await loginUser(page);
-    await page.goto("/dashboard");
+    await page.goto("/app/dashboard");
 
     // Click upload area to open modal
     await page.getByText("Drag files here or click to browse").click();
@@ -95,7 +95,7 @@ test.describe("App Pages", () => {
     // Login first since app pages are protected
     await loginUser(page);
     // Start at dashboard
-    await page.goto("/dashboard");
+    await page.goto("/app/dashboard");
 
     // Navigate to file manager
     await page.getByRole("link", {name: "File Manager"}).click();
@@ -107,6 +107,6 @@ test.describe("App Pages", () => {
 
     // Navigate back to dashboard
     await page.getByRole("link", {name: "Dashboard"}).click();
-    await expect(page).toHaveURL("/dashboard");
+    await expect(page).toHaveURL("/app/dashboard");
   });
 });

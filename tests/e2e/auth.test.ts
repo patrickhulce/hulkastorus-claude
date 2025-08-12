@@ -179,7 +179,7 @@ test.describe("Login Flow", () => {
     await page.getByRole("button", {name: "Login"}).click();
 
     // Should redirect to dashboard
-    await expect(page).toHaveURL("/dashboard");
+    await expect(page).toHaveURL("/app/dashboard");
 
     // Verify we can see user info on dashboard
     await expect(page.getByText(testEmail)).toBeVisible();
@@ -243,28 +243,24 @@ test.describe("Logout Flow", () => {
     await page.getByPlaceholder("Email").fill(testEmail);
     await page.getByPlaceholder("Password").fill("password123");
     await page.getByRole("button", {name: "Login"}).click();
-    await page.waitForURL("/dashboard");
+    await page.waitForURL("/app/dashboard");
 
     // Verify we're logged in (can see user email)
     await expect(page.getByText(testEmail)).toBeVisible();
 
-    // Now logout by clicking the logout link
-    await page.getByRole("link", {name: "Logout"}).click();
+    // Now logout by clicking the logout button
+    await page.getByRole("button", {name: "Logout"}).click();
 
-    // Wait for logout page to load
-    await page.waitForURL("/logout");
+    // Wait for logout process and check we're redirected
+    await page.waitForTimeout(2000);
 
-    // Wait a moment for NextAuth signOut to execute and redirect
-    await page.waitForTimeout(3000);
-
-    // Check if we're redirected to login, if not navigate there manually
+    // Should be on login page now
     if (!page.url().includes("/login")) {
       await page.goto("/login");
     }
-    await expect(page).toHaveURL("/login");
 
     // Verify we're logged out by trying to access dashboard directly
-    await page.goto("/dashboard");
+    await page.goto("/app/dashboard");
     // Should redirect to login with callbackUrl parameter (from middleware)
     await expect(page).toHaveURL(/\/login(\?.*)?/);
   });

@@ -22,7 +22,7 @@ export async function loginUser(page: Page, email?: string, password?: string) {
   await page.getByPlaceholder("Email").fill(testEmail);
   await page.getByPlaceholder("Password").fill(testPassword);
   await page.getByRole("button", {name: "Login"}).click();
-  await page.waitForURL("/dashboard");
+  await page.waitForURL("/app/dashboard");
 
   return testEmail;
 }
