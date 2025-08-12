@@ -176,6 +176,54 @@ export class R2Client {
       fileId: parts[3],
     };
   }
+
+  /**
+   * Upload object directly (for testing)
+   */
+  async putObject(params: {
+    env: string;
+    lifecyclePolicy: string;
+    userId: string;
+    fileId: string;
+    body: string | Buffer;
+    contentType?: string;
+  }): Promise<void> {
+    const objectKey = this.generateObjectKey(params);
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: objectKey,
+      Body: params.body,
+      ContentType: params.contentType || "application/octet-stream",
+    });
+
+    await this.s3Client.send(command);
+  }
+
+  /**
+   * Get object content directly (for testing)
+   */
+  async getObject(params: {
+    env: string;
+    lifecyclePolicy: string;
+    userId: string;
+    fileId: string;
+  }): Promise<{body: string; contentType?: string}> {
+    const objectKey = this.generateObjectKey(params);
+
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: objectKey,
+    });
+
+    const response = await this.s3Client.send(command);
+    const body = (await response.Body?.transformToString()) || "";
+
+    return {
+      body,
+      contentType: response.ContentType,
+    };
+  }
 }
 
 // Create default R2 client instance

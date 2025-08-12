@@ -20,7 +20,7 @@
 - [ ] Core Functionality (Basic)
     - [x] Create mock R2 server for testing
     - [x] Create R2 bucket
-    - [ ] Implement file upload, download API routes + public download route
+    - [x] Implement file upload, download API routes + public download route
     - [ ] Implement file upload UI on dashboard
     - [ ] Implement remainder of file+directory management routes
     - [ ] Implement file+directory list and navigation UI on file manager

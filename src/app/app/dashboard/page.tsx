@@ -4,11 +4,16 @@ import {useState} from "react";
 import {useSession, signOut} from "next-auth/react";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
+import {FileUploadModal} from "@/components/file-upload/file-upload-modal";
+import {FileList} from "@/components/file-list/file-list";
+import {DashboardStats} from "@/components/dashboard/dashboard-stats";
 
 export default function DashboardPage() {
   const {data: session, status} = useSession();
   const router = useRouter();
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   if (status === "loading") {
     return (
@@ -25,6 +30,29 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     await signOut({callbackUrl: "/login"});
+  };
+
+  const handleUploadComplete = (fileId: string) => {
+    console.log("Upload completed for file:", fileId);
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files.length > 0) {
+      setShowUploadModal(true);
+    }
   };
 
   return (
@@ -65,84 +93,48 @@ export default function DashboardPage() {
         </aside>
 
         <main className="flex-1 p-8">
-          <h1 className="text-3xl font-bold mb-8">Welcome to Hulkastorus</h1>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              + Upload File
+            </button>
+          </div>
 
+          {/* Quick Upload Area */}
           <div
-            className="border-2 border-dashed border-gray-600 rounded-lg p-16 mb-8 text-center cursor-pointer hover:border-gray-500 transition-colors"
+            className={`border-2 border-dashed rounded-lg p-12 mb-8 text-center cursor-pointer transition-colors bg-gray-900 bg-opacity-50 ${
+              isDragOver
+                ? "border-blue-500 bg-blue-500 bg-opacity-10"
+                : "border-gray-600 hover:border-gray-500"
+            }`}
             onClick={() => setShowUploadModal(true)}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           >
-            <div className="text-6xl mb-4">📁</div>
-            <h2 className="text-xl font-semibold mb-2">Drag files here or click to browse</h2>
-            <p className="text-gray-400">Upload files up to 5GB</p>
+            <div className="text-5xl mb-4">📁</div>
+            <h2 className="text-xl font-semibold mb-2">
+              {isDragOver ? "Drop files to upload" : "Drop files here or click to upload"}
+            </h2>
+            <p className="text-gray-400">Support for files up to 5GB</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <div className="bg-gray-900 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">Total Files</h3>
-              <div className="text-3xl font-bold">0</div>
-            </div>
-            <div className="bg-gray-900 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">Storage Used</h3>
-              <div className="text-3xl font-bold">0 GB</div>
-            </div>
-          </div>
+          {/* Dashboard Stats */}
+          <DashboardStats refreshTrigger={refreshTrigger} />
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-gray-900 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Recent Uploads</h3>
-              <div className="text-gray-400 text-center py-8">No files uploaded yet</div>
-            </div>
-            <div className="bg-gray-900 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Storage Breakdown</h3>
-              <div className="text-gray-400 text-center py-8">No data to display</div>
-            </div>
-          </div>
+          {/* File List */}
+          <FileList refreshTrigger={refreshTrigger} />
         </main>
       </div>
 
-      {showUploadModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-gray-900 p-6 rounded-lg w-96">
-            <h3 className="text-lg font-semibold mb-4">Upload File</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm mb-2">File</label>
-                <input
-                  type="file"
-                  className="w-full px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-2">Expiration</label>
-                <select className="w-full px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600">
-                  <option>Never</option>
-                  <option>1 day</option>
-                  <option>1 week</option>
-                  <option>1 month</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm mb-2">Permissions</label>
-                <select className="w-full px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600">
-                  <option>Public</option>
-                  <option>Private</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-6">
-              <button className="flex-1 bg-white text-black py-2 rounded hover:bg-gray-200">
-                Upload
-              </button>
-              <button
-                onClick={() => setShowUploadModal(false)}
-                className="flex-1 border border-gray-600 py-2 rounded hover:bg-gray-800"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FileUploadModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onUploadComplete={handleUploadComplete}
+      />
 
       <footer className="border-t border-gray-800 py-8">
         <div className="container mx-auto px-8 flex justify-center gap-8 text-gray-400">

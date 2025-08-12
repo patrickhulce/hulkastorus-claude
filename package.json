@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:with-r2": "node scripts/dev-with-r2.js",
+    "dev:r2-only": "node scripts/dev-r2-server.js",
     "build": "next build",
     "start": "next start",
     "test": "npm run test:lint && npm run test:format && npm run test:typecheck && npm run test:unit",
@@ -29,7 +31,8 @@
     "prisma": "^6.13.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@babel/core": "^7.28.0",

@@ -223,3 +223,28 @@ export class MockR2Server {
     return Array.from(this.objects.keys());
   }
 }
+
+// Global server instance for tests
+let globalMockServer: MockR2Server | null = null;
+
+// Export helper functions for tests
+export async function startMockR2Server(port: number): Promise<number> {
+  if (globalMockServer) {
+    await globalMockServer.stop();
+  }
+
+  globalMockServer = new MockR2Server(port, "test-bucket");
+  await globalMockServer.start();
+  return port;
+}
+
+export async function stopMockR2Server(): Promise<void> {
+  if (globalMockServer) {
+    await globalMockServer.stop();
+    globalMockServer = null;
+  }
+}
+
+export function getMockR2Server(): MockR2Server | null {
+  return globalMockServer;
+}

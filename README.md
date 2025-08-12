@@ -22,11 +22,13 @@ This is a [Next.js](https://nextjs.org) project implementing the architecture de
 ### Environment Setup
 
 1. Copy the environment template:
+
 ```bash
 cp .env.example .env.local
 ```
 
 2. Configure your environment variables:
+
 ```bash
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/hulkastorus"
@@ -45,16 +47,19 @@ R2_BUCKET_NAME="hulkastorus-ugc"
 ### Development
 
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Set up the database:
+
 ```bash
 npx prisma migrate dev
 ```
 
 3. Start the development server:
+
 ```bash
 pnpm dev
 ```
@@ -64,11 +69,13 @@ pnpm dev
 ## Testing
 
 ### Run All Tests
+
 ```bash
 pnpm test
 ```
 
 ### Test Categories
+
 ```bash
 # Unit tests only
 pnpm run test:unit

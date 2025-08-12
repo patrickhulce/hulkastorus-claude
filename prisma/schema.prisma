@@ -89,6 +89,7 @@ model Directory {
   children                Directory[] @relation("DirectoryHierarchy")
   files                   File[]
   
+  @@unique([userId, fullPath])
   @@map("directories")
 }
 
