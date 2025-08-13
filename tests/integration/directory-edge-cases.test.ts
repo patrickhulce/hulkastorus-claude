@@ -182,8 +182,8 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       const basePath = "/deep";
       let currentPath = "";
       const directories: Array<{
-        id: string; 
-        fullPath: string; 
+        id: string;
+        fullPath: string;
         parentId: string | null;
         userId: string;
         defaultPermissions: string;

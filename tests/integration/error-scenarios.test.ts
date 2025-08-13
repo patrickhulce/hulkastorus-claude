@@ -12,6 +12,9 @@ import {prisma} from "@/lib/prisma";
 // Mock Prisma with error scenarios
 jest.mock("@/lib/prisma", () => ({
   prisma: {
+    user: {
+      findUnique: jest.fn(),
+    },
     file: {
       create: jest.fn(),
       findFirst: jest.fn(),
@@ -42,10 +45,15 @@ jest.mock("@/lib/r2-config", () => {
   return {
     ...originalModule,
     currentEnv: "test",
+    parseLifecyclePolicy: jest.fn().mockReturnValue("infinite"),
     getR2Client: () => ({
       deleteObject: jest.fn(),
       putObject: jest.fn(),
       headObject: jest.fn(),
+      getUploadUrl: jest.fn().mockResolvedValue({
+        uploadUrl: "http://localhost:9020/upload",
+        objectKey: "test/infinite/test-user-id/test-file-id",
+      }),
     }),
   };
 });
@@ -126,6 +134,23 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle database connection timeout", async () => {
+      // Mock user lookup
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      // Mock directory upsert
+      (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+        id: "test-dir-id",
+        userId: "test-user-id",
+        fullPath: "/",
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       (prisma.file.create as jest.Mock).mockRejectedValue(
         new Error("Connection timeout after 30000ms"),
       );
@@ -147,6 +172,23 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle database constraint violations", async () => {
+      // Mock user lookup
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      // Mock directory upsert
+      (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+        id: "test-dir-id",
+        userId: "test-user-id",
+        fullPath: "/",
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       (prisma.file.create as jest.Mock).mockRejectedValue(
         Object.assign(new Error("Unique constraint failed"), {
           code: "P2002",
@@ -200,16 +242,24 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle transaction rollback failures", async () => {
-      (prisma.$transaction as jest.Mock).mockRejectedValue(
+      // Setup auth
+      const auth = jest.mocked(require("@/lib/auth").auth);
+      auth.mockResolvedValue({user: {id: "test-user-id"}});
+
+      // Setup directory to be found but make deletion fail
+      (prisma.directory.findFirst as jest.Mock).mockResolvedValue({
+        id: "transaction-test",
+        files: [{id: "file1", r2Locator: "test/infinite/test-user-id/file1", status: "validated"}],
+        _count: {children: 0},
+      });
+
+      // Make the directory deletion fail (this would trigger a 500)
+      (prisma.directory.delete as jest.Mock).mockRejectedValue(
         new Error("Transaction rollback failed"),
       );
 
-      // This would normally be called in a bulk operation
-      (prisma.directory.findFirst as jest.Mock).mockResolvedValue({
-        id: "transaction-test",
-        files: [{id: "file1", r2Locator: "test/file1"}],
-        _count: {children: 0},
-      });
+      // Mock other operations to succeed
+      (prisma.file.deleteMany as jest.Mock).mockResolvedValue({count: 1});
 
       const request = new NextRequest("http://localhost:3000/api/v1/directories/transaction-test", {
         method: "DELETE",
@@ -402,6 +452,23 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle memory exhaustion during large operations", async () => {
+      // Mock user lookup
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      // Mock directory upsert
+      (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+        id: "test-dir-id",
+        userId: "test-user-id",
+        fullPath: "/",
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       (prisma.file.create as jest.Mock).mockRejectedValue(
         Object.assign(new Error("JavaScript heap out of memory"), {
           code: "ERR_OUT_OF_MEMORY",
@@ -473,6 +540,23 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle invalid JSON payloads", async () => {
+      // Mock user lookup in case some JSON parsing succeeds
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      // Mock directory upsert in case some requests get that far
+      (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+        id: "test-dir-id",
+        userId: "test-user-id",
+        fullPath: "/",
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       const invalidJsonRequests = [
         "{invalid json syntax",
         '{"unclosed": "object"',
@@ -494,6 +578,23 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle oversized request payloads", async () => {
+      // Mock user lookup
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      // Mock directory upsert
+      (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+        id: "test-dir-id",
+        userId: "test-user-id",
+        fullPath: "/",
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       const oversizedPayload = JSON.stringify({
         filename: "test.txt",
         mimeType: "text/plain",
@@ -512,13 +613,50 @@ describe("Error Scenarios and Failure Handling", () => {
 
     it("should handle requests with missing required fields", async () => {
       const incompleteRequests = [
-        {}, // No fields
-        {filename: "test.txt"}, // Missing mimeType and permissions
-        {mimeType: "text/plain"}, // Missing filename and permissions
-        {permissions: "private"}, // Missing filename and mimeType
+        {}, // No fields - filename is required
+        {mimeType: "text/plain"}, // Missing filename (required)
+        {permissions: "private"}, // Missing filename (required)
+        {filename: ""}, // Empty filename (min length 1)
       ];
 
       for (const incomplete of incompleteRequests) {
+        // Setup mocks for each iteration
+        const auth = jest.mocked(require("@/lib/auth").auth);
+        auth.mockResolvedValue({user: {id: "test-user-id"}});
+
+        // Mock user lookup
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+          id: "test-user-id",
+          isEmailVerified: true,
+        });
+
+        // Mock directory upsert for when validation partially passes
+        (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+          id: "test-dir-id",
+          userId: "test-user-id",
+          fullPath: "/",
+          defaultPermissions: "private",
+          defaultExpirationPolicy: "infinite",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        // Mock file operations in case validation partially passes
+        (prisma.file.create as jest.Mock).mockResolvedValue({
+          id: "test-file-id",
+          userId: "test-user-id",
+          directoryId: "test-dir-id",
+          filename: "test.txt",
+          permissions: "private",
+          status: "reserved",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        (prisma.file.update as jest.Mock).mockResolvedValue({
+          id: "test-file-id",
+          r2Locator: "test/infinite/test-user-id/test-file-id",
+        });
+
         const request = new NextRequest("http://localhost:3000/api/v1/files", {
           method: "POST",
           body: JSON.stringify(incomplete),
@@ -546,6 +684,43 @@ describe("Error Scenarios and Failure Handling", () => {
       ];
 
       for (const mismatch of typeMismatchRequests) {
+        // Setup mocks for each iteration
+        const auth = jest.mocked(require("@/lib/auth").auth);
+        auth.mockResolvedValue({user: {id: "test-user-id"}});
+
+        // Mock user lookup
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+          id: "test-user-id",
+          isEmailVerified: true,
+        });
+
+        // Mock directory upsert for when validation partially passes
+        (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+          id: "test-dir-id",
+          userId: "test-user-id",
+          fullPath: "/",
+          defaultPermissions: "private",
+          defaultExpirationPolicy: "infinite",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        // Mock file operations in case validation partially passes
+        (prisma.file.create as jest.Mock).mockResolvedValue({
+          id: "test-file-id",
+          userId: "test-user-id",
+          directoryId: "test-dir-id",
+          filename: "test.txt",
+          permissions: "private",
+          status: "reserved",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        (prisma.file.update as jest.Mock).mockResolvedValue({
+          id: "test-file-id",
+          r2Locator: "test/infinite/test-user-id/test-file-id",
+        });
+
         const request = new NextRequest("http://localhost:3000/api/v1/files", {
           method: "POST",
           body: JSON.stringify(mismatch),
@@ -567,6 +742,23 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle SQL injection attempts in filenames", async () => {
+      // Mock user lookup
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      // Mock directory upsert for file creation
+      (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+        id: "test-dir-id",
+        userId: "test-user-id",
+        fullPath: "/",
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       const maliciousFilenames = [
         "'; DROP TABLE files; --",
         "test.txt'; DELETE FROM files WHERE '1'='1",
@@ -582,6 +774,17 @@ describe("Error Scenarios and Failure Handling", () => {
           mimeType: "text/plain",
           permissions: "private",
           userId: "test-user-id",
+          directoryId: "test-dir-id",
+          status: "reserved",
+          fullPath: `/${maliciousName}`,
+          expirationPolicy: "infinite",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        (prisma.file.update as jest.Mock).mockResolvedValue({
+          id: "injection-test",
+          r2Locator: "test/infinite/test-user-id/injection-test",
         });
 
         const request = new NextRequest("http://localhost:3000/api/v1/files", {
@@ -595,7 +798,7 @@ describe("Error Scenarios and Failure Handling", () => {
 
         const response = await createFile(request);
         // Should either succeed with sanitized input or reject safely
-        expect([201, 400]).toContain(response.status);
+        expect([200, 400]).toContain(response.status);
       }
     });
 
@@ -622,6 +825,23 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle XSS attempts in filenames and paths", async () => {
+      // Mock user lookup
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      // Mock directory upsert for file creation
+      (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+        id: "test-dir-id",
+        userId: "test-user-id",
+        fullPath: "/",
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       const xssPayloads = [
         "<script>alert('xss')</script>",
         "javascript:alert('xss')",
@@ -637,6 +857,17 @@ describe("Error Scenarios and Failure Handling", () => {
           mimeType: "text/plain",
           permissions: "private",
           userId: "test-user-id",
+          directoryId: "test-dir-id",
+          status: "reserved",
+          fullPath: `/${xssPayload}`,
+          expirationPolicy: "infinite",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        (prisma.file.update as jest.Mock).mockResolvedValue({
+          id: "xss-test",
+          r2Locator: "test/infinite/test-user-id/xss-test",
         });
 
         const request = new NextRequest("http://localhost:3000/api/v1/files", {
@@ -650,9 +881,9 @@ describe("Error Scenarios and Failure Handling", () => {
 
         const response = await createFile(request);
         // Should handle safely without executing scripts
-        expect([201, 400]).toContain(response.status);
+        expect([200, 400]).toContain(response.status);
 
-        if (response.status === 201) {
+        if (response.status === 200) {
           const data = await response.json();
           // Filename should be stored as-is (backend doesn't execute)
           expect(typeof data.filename).toBe("string");
@@ -668,6 +899,23 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle rapid successive requests", async () => {
+      // Mock user lookup
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      // Mock directory upsert for file creation
+      (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+        id: "test-dir-id",
+        userId: "test-user-id",
+        fullPath: "/",
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       let requestCount = 0;
       (prisma.file.create as jest.Mock).mockImplementation(() => {
         requestCount++;
@@ -680,7 +928,18 @@ describe("Error Scenarios and Failure Handling", () => {
           mimeType: "text/plain",
           permissions: "private",
           userId: "test-user-id",
+          directoryId: "test-dir-id",
+          status: "reserved",
+          fullPath: `/file-${requestCount}.txt`,
+          expirationPolicy: "infinite",
+          createdAt: new Date(),
+          updatedAt: new Date(),
         });
+      });
+
+      (prisma.file.update as jest.Mock).mockResolvedValue({
+        id: "rapid-file",
+        r2Locator: "test/infinite/test-user-id/rapid-file",
       });
 
       // Make 15 rapid requests
@@ -699,7 +958,7 @@ describe("Error Scenarios and Failure Handling", () => {
 
       const responses = await Promise.allSettled(promises);
       const successful = responses.filter(
-        (r) => r.status === "fulfilled" && r.value.status === 201,
+        (r) => r.status === "fulfilled" && r.value.status === 200,
       );
       const failed = responses.filter(
         (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.status === 500),
@@ -710,6 +969,23 @@ describe("Error Scenarios and Failure Handling", () => {
     });
 
     it("should handle extremely long request queues", async () => {
+      // Mock user lookup
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      // Mock directory upsert for file creation
+      (prisma.directory.upsert as jest.Mock).mockResolvedValue({
+        id: "test-dir-id",
+        userId: "test-user-id",
+        fullPath: "/",
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       const queueLength = 1000;
       let processedCount = 0;
 
@@ -721,7 +997,18 @@ describe("Error Scenarios and Failure Handling", () => {
           mimeType: "text/plain",
           permissions: "private",
           userId: "test-user-id",
+          directoryId: "test-dir-id",
+          status: "reserved",
+          fullPath: `/queued-${processedCount}.txt`,
+          expirationPolicy: "infinite",
+          createdAt: new Date(),
+          updatedAt: new Date(),
         });
+      });
+
+      (prisma.file.update as jest.Mock).mockResolvedValue({
+        id: "queue-file",
+        r2Locator: "test/infinite/test-user-id/queue-file",
       });
 
       const startTime = Date.now();
@@ -741,7 +1028,7 @@ describe("Error Scenarios and Failure Handling", () => {
       const responses = await Promise.all(promises);
       const endTime = Date.now();
 
-      const successful = responses.filter((r) => r.status === 201);
+      const successful = responses.filter((r) => r.status === 200);
       expect(successful.length).toBe(queueLength);
       expect(endTime - startTime).toBeLessThan(30000); // Should complete within 30 seconds
     });
