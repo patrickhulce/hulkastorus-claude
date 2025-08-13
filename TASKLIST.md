@@ -21,9 +21,9 @@
     - [x] Create mock R2 server for testing
     - [x] Create R2 bucket
     - [x] Implement file upload, download API routes + public download route
-    - [ ] Implement file upload UI on dashboard
-    - [ ] Implement remainder of file+directory management routes
-    - [ ] Implement file+directory list and navigation UI on file manager
+    - [x] Implement file upload UI on dashboard
+    - [x] Implement remainder of file+directory management routes
+    - [x] Implement file+directory list and navigation UI on file manager
     - [ ] Implement file+directory deletion and rename UI on file manager
 - [ ] Core Functionality (Advanced)
     - [ ] Implement expiry sweep cron job

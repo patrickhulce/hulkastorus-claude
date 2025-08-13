@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState, useRef, useCallback} from "react";
+import React, {useState, useRef, useCallback, useEffect} from "react";
 import {FileUploadProgress} from "./file-upload-progress";
 
 interface FileWithPath extends File {
@@ -11,6 +11,7 @@ interface FileUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUploadComplete?: (fileId: string) => void;
+  initialPath?: string;
 }
 
 interface UploadState {
@@ -21,7 +22,7 @@ interface UploadState {
   fileId?: string;
 }
 
-export function FileUploadModal({isOpen, onClose, onUploadComplete}: FileUploadModalProps) {
+export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath = "/"}: FileUploadModalProps) {
   const [uploadState, setUploadState] = useState<UploadState>({
     file: null,
     progress: 0,
@@ -47,6 +48,13 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete}: FileUploadM
     }
   }, []);
 
+  // Reset fullPath when modal opens to a new directory
+  useEffect(() => {
+    if (isOpen && !fullPath) {
+      // Don't auto-set if user has already typed something
+    }
+  }, [isOpen, initialPath, fullPath]);
+
   const handleClose = () => {
     if (uploadState.status !== "uploading" && uploadState.status !== "validating") {
       resetModal();
@@ -66,7 +74,9 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete}: FileUploadM
 
     // Generate a default path from the file name if none provided
     if (!fullPath) {
-      setFullPath(`/${file.name}`);
+      const fileName = file.name;
+      const defaultPath = initialPath === "/" ? `/${fileName}` : `${initialPath}/${fileName}`;
+      setFullPath(defaultPath);
     }
   }, [fullPath]);
 
