@@ -76,7 +76,7 @@ describe("/api/v1/users", () => {
         method: "DELETE",
       });
 
-      const response = await DELETE(request, {params: {id: "test-id"}});
+      const response = await DELETE(request, {params: Promise.resolve({id: "test-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(200);

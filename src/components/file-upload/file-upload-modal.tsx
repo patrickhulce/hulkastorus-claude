@@ -78,7 +78,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
       const defaultPath = initialPath === "/" ? `/${fileName}` : `${initialPath}/${fileName}`;
       setFullPath(defaultPath);
     }
-  }, [fullPath]);
+  }, [fullPath, initialPath]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

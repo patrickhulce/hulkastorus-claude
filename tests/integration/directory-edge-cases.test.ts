@@ -169,7 +169,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       const depth = 20;
       const basePath = "/deep";
       let currentPath = basePath;
-      const directories = [];
+      const directories: Array<{id: string; fullPath: string; parentId: string | null}> = [];
 
       for (let i = 1; i <= depth; i++) {
         currentPath += `/level${i}`;
@@ -182,7 +182,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
 
       (prisma.directory.upsert as jest.Mock).mockImplementation((params) => {
         const path = params.where.userId_fullPath.fullPath;
-        const dir = directories.find((d) => d.fullPath === path);
+        const dir = directories.find((d: {fullPath: string}) => d.fullPath === path);
         return Promise.resolve(dir || directories[directories.length - 1]);
       });
 

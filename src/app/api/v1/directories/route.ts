@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
-    const {fullPath, parentId, defaultPermissions, defaultExpirationPolicy} = 
+    const {fullPath, defaultPermissions, defaultExpirationPolicy} = 
       createDirectorySchema.parse(body);
 
     // Normalize path
@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
     for (const part of pathParts) {
       currentPath = currentPath ? `${currentPath}/${part}` : `/${part}`;
       
-      const directory = await prisma.directory.upsert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const directory: any = await prisma.directory.upsert({
         where: {
           userId_fullPath: {
             userId,
@@ -65,12 +66,14 @@ export async function POST(request: NextRequest) {
           } : {})
         },
         create: {
-          user: { connect: { id: userId } },
+          id: `dir_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          userId,
           fullPath: currentPath,
-          parentId: parentId || currentParentId,
+          parentId: currentParentId,
           defaultPermissions: currentPath === normalizedPath ? defaultPermissions : "private",
           defaultExpirationPolicy: currentPath === normalizedPath ? defaultExpirationPolicy : "infinite",
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any
       });
       
       currentParentId = directory.id;

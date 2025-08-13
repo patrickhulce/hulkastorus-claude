@@ -87,7 +87,7 @@ describe("GET /api/v1/files/:id/download", () => {
     it("should redirect to download URL for public files", async () => {
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
 
       expect(response.status).toBe(307); // Redirect
       const location = response.headers.get("Location");
@@ -102,7 +102,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
 
       expect(response.status).toBe(307); // Redirect
     });
@@ -122,7 +122,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
 
       expect(response.status).toBe(307); // Redirect
       const location = response.headers.get("Location");
@@ -138,7 +138,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -152,7 +152,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -166,7 +166,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/nonexistent/download");
 
-      const response = await GET(request, {params: {id: "nonexistent"}});
+      const response = await GET(request, {params: Promise.resolve({id: "nonexistent"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -178,7 +178,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -193,7 +193,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -214,7 +214,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -235,7 +235,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -253,7 +253,7 @@ describe("GET /api/v1/files/:id/download", () => {
         "http://localhost:3000/api/v1/files/test-file-id/download?token=some-token",
       );
 
-      await GET(request, {params: {id: "test-file-id"}});
+      await GET(request, {params: Promise.resolve({id: "test-file-id"})});
 
       expect(getToken).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -275,7 +275,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
 
       // Should still work for public files even if auth fails
       expect(response.status).toBe(307);
@@ -286,7 +286,7 @@ describe("GET /api/v1/files/:id/download", () => {
 
       const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/download");
 
-      const response = await GET(request, {params: {id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(500);

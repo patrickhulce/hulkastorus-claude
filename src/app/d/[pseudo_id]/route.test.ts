@@ -87,7 +87,7 @@ describe("GET /d/:pseudo_id", () => {
     it("should redirect to download URL for public files", async () => {
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
 
       expect(response.status).toBe(307); // Redirect
       const location = response.headers.get("Location");
@@ -102,7 +102,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
 
       expect(response.status).toBe(307); // Redirect
     });
@@ -111,7 +111,7 @@ describe("GET /d/:pseudo_id", () => {
       // Test that the pseudo_id is treated as file ID
       const request = new NextRequest("http://localhost:3000/d/my-file-123");
 
-      await GET(request, {params: {pseudo_id: "my-file-123"}});
+      await GET(request, {params: Promise.resolve({pseudo_id: "my-file-123"})});
 
       expect(prisma.file.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -135,7 +135,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
 
       expect(response.status).toBe(307); // Redirect
       const location = response.headers.get("Location");
@@ -151,7 +151,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -165,7 +165,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -179,7 +179,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/nonexistent");
 
-      const response = await GET(request, {params: {pseudo_id: "nonexistent"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "nonexistent"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -191,7 +191,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -206,7 +206,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -227,7 +227,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -248,7 +248,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -264,7 +264,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id?token=some-token");
 
-      await GET(request, {params: {pseudo_id: "test-file-id"}});
+      await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
 
       expect(getToken).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -280,7 +280,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
 
       expect(response.status).toBe(307); // Should redirect without token
     });
@@ -293,7 +293,7 @@ describe("GET /d/:pseudo_id", () => {
       const request = new NextRequest("http://localhost:3000/d/test-file_123-ABC");
 
       await GET(request, {
-        params: {pseudo_id: "test-file_123-ABC"},
+        params: Promise.resolve({pseudo_id: "test-file_123-ABC"}),
       });
 
       expect(prisma.file.findUnique).toHaveBeenCalledWith(
@@ -316,7 +316,7 @@ describe("GET /d/:pseudo_id", () => {
         "http://localhost:3000/d/test-file-id?download=true&filename=custom.txt",
       );
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
 
       expect(response.status).toBe(307);
       // The redirect URL should be a presigned URL from R2
@@ -335,7 +335,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
 
       // Should still work for public files even if auth fails
       expect(response.status).toBe(307);
@@ -346,7 +346,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -367,7 +367,7 @@ describe("GET /d/:pseudo_id", () => {
 
       const request = new NextRequest("http://localhost:3000/d/test-file-id");
 
-      const response = await GET(request, {params: {pseudo_id: "test-file-id"}});
+      const response = await GET(request, {params: Promise.resolve({pseudo_id: "test-file-id"})});
       const data = await response.json();
 
       expect(response.status).toBe(500);

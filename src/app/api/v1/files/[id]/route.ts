@@ -127,7 +127,8 @@ export async function PUT(request: NextRequest, {params}: {params: Promise<{id: 
           for (const part of pathParts) {
             currentPath = currentPath ? `${currentPath}/${part}` : `/${part}`;
             
-            const directory = await prisma.directory.upsert({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const directory: any = await prisma.directory.upsert({
               where: {
                 userId_fullPath: {
                   userId,
@@ -136,12 +137,14 @@ export async function PUT(request: NextRequest, {params}: {params: Promise<{id: 
               },
               update: {},
               create: {
-                user: { connect: { id: userId } },
+                id: `dir_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                userId,
                 fullPath: currentPath,
                 parentId: parentDirectoryId,
                 defaultPermissions: "private",
                 defaultExpirationPolicy: "infinite",
-              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              } as any
             });
             
             parentDirectoryId = directory.id;

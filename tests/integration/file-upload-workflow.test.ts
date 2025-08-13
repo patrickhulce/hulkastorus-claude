@@ -165,7 +165,7 @@ describe("File Upload Workflow Integration", () => {
       );
 
       const statusResponse = await updateFileStatus(statusRequest, {
-        params: {id: "test-file-id"},
+        params: Promise.resolve({id: "test-file-id"}),
       });
       const statusData = await statusResponse.json();
 
@@ -184,7 +184,7 @@ describe("File Upload Workflow Integration", () => {
       );
 
       const downloadResponse = await downloadFile(downloadRequest, {
-        params: {id: "test-file-id"},
+        params: Promise.resolve({id: "test-file-id"}),
       });
 
       expect(downloadResponse.status).toBe(307); // Redirect
@@ -247,7 +247,7 @@ describe("File Upload Workflow Integration", () => {
       const publicRequest = new NextRequest("http://localhost:3000/d/test-file-id");
 
       const publicResponse = await publicDownload(publicRequest, {
-        params: {pseudo_id: "test-file-id"},
+        params: Promise.resolve({pseudo_id: "test-file-id"}),
       });
 
       expect(publicResponse.status).toBe(307); // Redirect
@@ -288,7 +288,7 @@ describe("File Upload Workflow Integration", () => {
       );
 
       const downloadResponse = await downloadFile(downloadRequest, {
-        params: {id: "test-file-id"},
+        params: Promise.resolve({id: "test-file-id"}),
       });
       const downloadData = await downloadResponse.json();
 
@@ -299,7 +299,7 @@ describe("File Upload Workflow Integration", () => {
       const publicRequest = new NextRequest("http://localhost:3000/d/test-file-id");
 
       const publicResponse = await publicDownload(publicRequest, {
-        params: {pseudo_id: "test-file-id"},
+        params: Promise.resolve({pseudo_id: "test-file-id"}),
       });
       const publicData = await publicResponse.json();
 
@@ -325,7 +325,7 @@ describe("File Upload Workflow Integration", () => {
       );
 
       const downloadResponse = await downloadFile(downloadRequest, {
-        params: {id: "test-file-id"},
+        params: Promise.resolve({id: "test-file-id"}),
       });
       const downloadData = await downloadResponse.json();
 
@@ -358,7 +358,7 @@ describe("File Upload Workflow Integration", () => {
       );
 
       const statusResponse = await updateFileStatus(statusRequest, {
-        params: {id: "test-file-id"},
+        params: Promise.resolve({id: "test-file-id"}),
       });
       const statusData = await statusResponse.json();
 

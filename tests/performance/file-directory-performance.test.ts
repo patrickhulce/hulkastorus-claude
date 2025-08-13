@@ -212,7 +212,7 @@ describe("File and Directory Management Performance Tests", () => {
       const depth = 50;
       const basePath = "/performance/deep";
       let currentPath = basePath;
-      const directories = [];
+      const directories: any[] = [];
 
       for (let i = 1; i <= depth; i++) {
         currentPath += `/level-${i}`;
@@ -231,7 +231,7 @@ describe("File and Directory Management Performance Tests", () => {
 
       (prisma.directory.upsert as jest.Mock).mockImplementation((params) => {
         const path = params.where.userId_fullPath.fullPath;
-        const dir = directories.find(d => d.fullPath === path);
+        const dir = directories.find((d: any) => d.fullPath === path);
         return Promise.resolve(dir || directories[directories.length - 1]);
       });
 
@@ -290,7 +290,7 @@ describe("File and Directory Management Performance Tests", () => {
     it("should handle recursive directory operations efficiently", async () => {
       const depth = 10;
       const breadth = 5;
-      const directories = [];
+      const directories: any[] = [];
 
       // Create a tree structure
       let nodeId = 0;
@@ -392,7 +392,7 @@ describe("File and Directory Management Performance Tests", () => {
   describe("Mixed Operations Performance", () => {
     it("should handle mixed file and directory operations efficiently", async () => {
       const operationCount = 200;
-      const operations = [];
+      const operations: any[] = [];
 
       // Setup mock data
       const mockFile = {

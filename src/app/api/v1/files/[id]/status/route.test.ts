@@ -108,7 +108,7 @@ describe("PUT /api/v1/files/:id/status", () => {
       }),
     });
 
-    const response = await PUT(request, {params: {id: "test-file-id"}});
+    const response = await PUT(request, {params: Promise.resolve({id: "test-file-id"})});
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -136,7 +136,7 @@ describe("PUT /api/v1/files/:id/status", () => {
       }),
     });
 
-    const response = await PUT(request, {params: {id: "test-file-id"}});
+    const response = await PUT(request, {params: Promise.resolve({id: "test-file-id"})});
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -165,7 +165,7 @@ describe("PUT /api/v1/files/:id/status", () => {
       }),
     });
 
-    const response = await PUT(request, {params: {id: "test-file-id"}});
+    const response = await PUT(request, {params: Promise.resolve({id: "test-file-id"})});
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -182,7 +182,7 @@ describe("PUT /api/v1/files/:id/status", () => {
       }),
     });
 
-    const response = await PUT(request, {params: {id: "test-file-id"}});
+    const response = await PUT(request, {params: Promise.resolve({id: "test-file-id"})});
     const data = await response.json();
 
     expect(response.status).toBe(404);
@@ -202,7 +202,7 @@ describe("PUT /api/v1/files/:id/status", () => {
       }),
     });
 
-    const response = await PUT(request, {params: {id: "test-file-id"}});
+    const response = await PUT(request, {params: Promise.resolve({id: "test-file-id"})});
     const data = await response.json();
 
     expect(response.status).toBe(404);
@@ -222,7 +222,7 @@ describe("PUT /api/v1/files/:id/status", () => {
       }),
     });
 
-    const response = await PUT(request, {params: {id: "test-file-id"}});
+    const response = await PUT(request, {params: Promise.resolve({id: "test-file-id"})});
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -237,7 +237,7 @@ describe("PUT /api/v1/files/:id/status", () => {
       }),
     });
 
-    const response = await PUT(request, {params: {id: "test-file-id"}});
+    const response = await PUT(request, {params: Promise.resolve({id: "test-file-id"})});
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -270,7 +270,7 @@ describe("PUT /api/v1/files/:id/status", () => {
       }),
     });
 
-    const response = await PUT(request, {params: {id: "test-file-id"}});
+    const response = await PUT(request, {params: Promise.resolve({id: "test-file-id"})});
 
     expect(response.status).toBe(200);
 
@@ -309,7 +309,7 @@ describe("PUT /api/v1/files/:id/status", () => {
       }),
     });
 
-    const response = await PUT(request, {params: {id: "test-file-id"}});
+    const response = await PUT(request, {params: Promise.resolve({id: "test-file-id"})});
 
     expect(response.status).toBe(200);
 
