@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({error: "Unauthorized"}, {status: 401});
     }
 
-    // Check if user is email verified
+    // Check if user exists
     const user = await prisma.user.findUnique({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       where: {id: (session as any).user.id},
@@ -38,9 +38,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({error: "User not found"}, {status: 404});
     }
 
-    if (!user.isEmailVerified) {
-      return NextResponse.json({error: "Email verification required"}, {status: 403});
-    }
+    // TODO: Re-enable email verification check
+    // if (!user.isEmailVerified) {
+    //   return NextResponse.json({error: "Email verification required"}, {status: 403});
+    // }
 
     // TODO: Check user quota
     // This would be implemented when quota tracking is added
@@ -187,13 +188,17 @@ export async function GET(request: NextRequest) {
     }
 
     const {searchParams} = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 100);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 1000); // Allow up to 1000 for dashboard
     const offset = parseInt(searchParams.get("offset") || "0");
-    const orderBy = searchParams.get("order_by") || "created_at+desc";
+    const orderBy = searchParams.get("order_by") || "createdAt+desc";
 
     // Parse order by
     const [field, direction] = orderBy.split("+");
     const orderDirection = direction === "asc" ? "asc" : "desc";
+
+    // Validate field name - map common field names and validate
+    const validFields = ["createdAt", "updatedAt", "filename", "sizeBytes"];
+    const validatedField = validFields.includes(field) ? field : "createdAt";
 
     // Get filters
     const permissionsFilter = searchParams.get("filter~permissions");
@@ -216,7 +221,7 @@ export async function GET(request: NextRequest) {
     const files = await prisma.file.findMany({
       where: whereClause,
       orderBy: {
-        [field]: orderDirection,
+        [validatedField]: orderDirection,
       },
       skip: offset,
       take: limit,

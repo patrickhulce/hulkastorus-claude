@@ -47,7 +47,15 @@ export function DashboardStats({refreshTrigger}: DashboardStatsProps) {
       ]);
 
       if (!allFilesResponse.ok || !recentFilesResponse.ok) {
-        throw new Error("Failed to fetch dashboard data");
+        const allFilesError = !allFilesResponse.ok ? await allFilesResponse.text() : null;
+        const recentFilesError = !recentFilesResponse.ok ? await recentFilesResponse.text() : null;
+        console.error("API Error Details:", {
+          allFilesStatus: allFilesResponse.status,
+          allFilesError,
+          recentFilesStatus: recentFilesResponse.status,
+          recentFilesError,
+        });
+        throw new Error(`Failed to fetch dashboard data: ${allFilesError || recentFilesError}`);
       }
 
       const allFiles = await allFilesResponse.json();
