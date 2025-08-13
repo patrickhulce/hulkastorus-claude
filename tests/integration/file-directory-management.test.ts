@@ -619,9 +619,21 @@ describe("File and Directory Management Integration", () => {
         user: {id: "test-user-id"},
       });
 
-      (prisma.directory.upsert as jest.Mock)
-        .mockResolvedValueOnce(etcDir)
-        .mockResolvedValueOnce(normalizedDir);
+      // Mock user lookup for directory operations
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: "test-user-id",
+        isEmailVerified: true,
+      });
+
+      let upsertCallCount = 0;
+      (prisma.directory.upsert as jest.Mock).mockImplementation(() => {
+        upsertCallCount++;
+        if (upsertCallCount === 1) {
+          return Promise.resolve(etcDir);
+        } else {
+          return Promise.resolve(normalizedDir);
+        }
+      });
       (prisma.directory.findUnique as jest.Mock).mockResolvedValue(normalizedDir);
 
       const maliciousRequest = new NextRequest("http://localhost:3000/api/v1/directories", {

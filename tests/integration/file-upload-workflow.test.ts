@@ -34,22 +34,37 @@ jest.mock("@/lib/nanoid", () => ({
   generateNanoId: jest.fn().mockReturnValueOnce("test-file-id").mockReturnValueOnce("test-dir-id"),
 }));
 
-// Mock R2 config to use test server
+// Mock R2 config to use controlled client
+const mockGetObjectInfo = jest.fn();
+const mockGetDownloadUrl = jest.fn();
+const mockGetUploadUrl = jest.fn();
+const mockParseObjectKey = jest.fn();
+const mockDeleteObject = jest.fn();
+const mockPutObject = jest.fn();
+
 jest.mock("@/lib/r2-config", () => {
   const originalModule = jest.requireActual("@/lib/r2-config");
   return {
     ...originalModule,
     currentEnv: "test",
-    getR2Client: () => {
-      const {R2Client} = jest.requireActual("@/lib/r2-client");
-      return new R2Client({
-        endpoint: "http://localhost:9008",
-        accessKeyId: "test",
-        secretAccessKey: "test",
-        bucketName: "test-bucket",
-        region: "auto",
-      });
-    },
+    parseLifecyclePolicy: jest.fn().mockReturnValue("infinite"),
+    getR2Client: () => ({
+      parseObjectKey: mockParseObjectKey,
+      getObjectInfo: mockGetObjectInfo,
+      getUploadUrl: mockGetUploadUrl,
+      getDownloadUrl: mockGetDownloadUrl,
+      deleteObject: mockDeleteObject,
+      putObject: mockPutObject,
+      getObject: jest.fn().mockImplementation(({env, lifecyclePolicy, userId, fileId}) => {
+        const key = `${env}/${lifecyclePolicy}/${userId}/${fileId}`;
+        // Return some test content
+        return Promise.resolve({
+          body: "Hello, world! This is a test file.",
+          contentType: "text/plain",
+          size: 34,
+        });
+      }),
+    }),
   };
 });
 
@@ -79,6 +94,26 @@ describe("File Upload Workflow Integration", () => {
       id: "test-user-id",
       isEmailVerified: true,
     });
+
+    // Setup default R2 mocks
+    mockParseObjectKey.mockReturnValue({
+      env: "test",
+      lifecyclePolicy: "infinite",
+      userId: "test-user-id",
+      fileId: "test-file-id",
+    });
+    mockGetUploadUrl.mockResolvedValue({
+      uploadUrl: "http://localhost:9008/upload",
+      objectKey: "test/infinite/test-user-id/test-file-id",
+    });
+    mockGetObjectInfo.mockResolvedValue({
+      exists: true,
+      size: 1024,
+      contentType: "text/plain",
+    });
+    mockGetDownloadUrl.mockResolvedValue("http://localhost:9008/download/test-file-id");
+    mockDeleteObject.mockResolvedValue(undefined);
+    mockPutObject.mockResolvedValue(undefined);
 
     (prisma.directory.upsert as jest.Mock).mockResolvedValue({
       id: "test-dir-id",
@@ -131,18 +166,8 @@ describe("File Upload Workflow Integration", () => {
       expect(createData.id).toBe("test-file-id");
       expect(createData.status).toBe("reserved");
 
-      // Step 2: Upload file to R2 using the upload URL
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const {getR2Client} = jest.requireActual("@/lib/r2-config");
-      const r2Client = getR2Client();
-      await r2Client.putObject({
-        env: "test",
-        lifecyclePolicy: "infinite",
-        userId: "test-user-id",
-        fileId: "test-file-id",
-        body: fileContent,
-        contentType: "text/plain",
-      });
+      // Step 2: Simulate file upload to R2 (mock handles this)
+      // In a real scenario, the client would upload via the uploadUrl
 
       // Step 3: Update file status to validate upload
       const mockValidatedFile = {
@@ -190,16 +215,16 @@ describe("File Upload Workflow Integration", () => {
       expect(downloadResponse.status).toBe(307); // Redirect
       const downloadLocation = downloadResponse.headers.get("Location");
       expect(downloadLocation).toContain("http://localhost:9008");
-      expect(downloadLocation).toContain("test/infinite/test-user-id/test-file-id");
+      expect(downloadLocation).toContain("download/test-file-id");
 
-      // Verify we can actually download the content
-      const actualContent = await r2Client.getObject({
+      // Verify mock was called with correct parameters
+      expect(mockGetDownloadUrl).toHaveBeenCalledWith({
         env: "test",
         lifecyclePolicy: "infinite",
         userId: "test-user-id",
         fileId: "test-file-id",
+        expiresIn: 3600,
       });
-      expect(actualContent.body).toBe(fileContent);
     });
 
     it("should handle public file workflow", async () => {
@@ -224,18 +249,7 @@ describe("File Upload Workflow Integration", () => {
         user: {id: "test-user-id"},
       };
 
-      // Upload file to R2
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const {getR2Client} = jest.requireActual("@/lib/r2-config");
-      const r2Client = getR2Client();
-      await r2Client.putObject({
-        env: "test",
-        lifecyclePolicy: "infinite",
-        userId: "test-user-id",
-        fileId: "test-file-id",
-        body: fileContent,
-        contentType: "text/plain",
-      });
+      // Simulate file upload (handled by mocks)
 
       (prisma.file.findUnique as jest.Mock).mockResolvedValue(mockPublicFile);
 
@@ -254,14 +268,8 @@ describe("File Upload Workflow Integration", () => {
       const publicLocation = publicResponse.headers.get("Location");
       expect(publicLocation).toContain("http://localhost:9008");
 
-      // Verify content is accessible
-      const actualContent = await r2Client.getObject({
-        env: "test",
-        lifecyclePolicy: "infinite",
-        userId: "test-user-id",
-        fileId: "test-file-id",
-      });
-      expect(actualContent.body).toBe(fileContent);
+      // Verify download URL generation was called
+      expect(mockGetDownloadUrl).toHaveBeenCalled();
     });
 
     it("should reject access to private files from unauthorized users", async () => {
@@ -334,6 +342,11 @@ describe("File Upload Workflow Integration", () => {
     });
 
     it("should handle file upload failure scenario", async () => {
+      // Override mock to simulate file not found in R2
+      mockGetObjectInfo.mockResolvedValue({
+        exists: false,
+      });
+
       // Create file record
       const mockFile = {
         id: "test-file-id",

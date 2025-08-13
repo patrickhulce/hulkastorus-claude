@@ -180,15 +180,42 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       // Create a 20-level deep directory structure
       const depth = 20;
       const basePath = "/deep";
-      let currentPath = basePath;
-      const directories: Array<{id: string; fullPath: string; parentId: string | null}> = [];
+      let currentPath = "";
+      const directories: Array<{
+        id: string; 
+        fullPath: string; 
+        parentId: string | null;
+        userId: string;
+        defaultPermissions: string;
+        defaultExpirationPolicy: string;
+        createdAt: Date;
+        updatedAt: Date;
+      }> = [];
 
+      // First create the base directory
+      directories.push({
+        id: "deep-0",
+        fullPath: basePath,
+        parentId: null,
+        userId: mockUser,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: mockDate,
+        updatedAt: mockDate,
+      });
+
+      currentPath = basePath;
       for (let i = 1; i <= depth; i++) {
         currentPath += `/level${i}`;
         directories.push({
           id: `deep-${i}`,
           fullPath: currentPath,
-          parentId: i === 1 ? null : `deep-${i - 1}`,
+          parentId: i === 1 ? "deep-0" : `deep-${i - 1}`,
+          userId: mockUser,
+          defaultPermissions: "private",
+          defaultExpirationPolicy: "infinite",
+          createdAt: mockDate,
+          updatedAt: mockDate,
         });
       }
 
@@ -216,7 +243,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
 
       expect(response.status).toBe(201);
       expect(data.fullPath).toBe(finalPath);
-      expect(prisma.directory.upsert).toHaveBeenCalledTimes(depth);
+      expect(prisma.directory.upsert).toHaveBeenCalledTimes(depth + 1); // +1 for base directory
     });
 
     it("should handle directory tree with many siblings", async () => {
@@ -327,26 +354,44 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       };
 
       let renameAttempts = 0;
-      (prisma.directory.findFirst as jest.Mock).mockResolvedValue(originalDir);
+      let findFirstCalls = 0;
+      (prisma.directory.findFirst as jest.Mock).mockImplementation(() => {
+        findFirstCalls++;
+        if (findFirstCalls <= 2) {
+          // First two calls are for finding the directory to update
+          return Promise.resolve(originalDir);
+        } else if (findFirstCalls === 3) {
+          // Third call checks for existing directory at new path - allow first rename
+          return Promise.resolve(null);
+        } else {
+          // Fourth call checks for existing directory at new path - block second rename
+          return Promise.resolve({
+            id: "existing-dir",
+            fullPath: "/totally/separate/path2",
+            userId: mockUser,
+          });
+        }
+      });
       (prisma.directory.update as jest.Mock).mockImplementation(() => {
         renameAttempts++;
         if (renameAttempts === 1) {
           // First rename succeeds
           return Promise.resolve({
             ...originalDir,
-            fullPath: "/renamed/path1",
+            fullPath: "/completely/different/path1",
+            updatedAt: mockDate,
             _count: {files: 0, children: 0},
           });
         } else {
           // Second rename conflicts
-          throw new Error("Directory path already exists");
+          return Promise.reject(new Error("Directory path already exists"));
         }
       });
 
       const rename1 = updateDir(
         new NextRequest("http://localhost:3000/api/v1/directories/concurrent-rename", {
           method: "PUT",
-          body: JSON.stringify({fullPath: "/renamed/path1"}),
+          body: JSON.stringify({fullPath: "/completely/different/path1"}),
         }),
         {params: Promise.resolve({id: "concurrent-rename"})},
       );
@@ -354,12 +399,16 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       const rename2 = updateDir(
         new NextRequest("http://localhost:3000/api/v1/directories/concurrent-rename", {
           method: "PUT",
-          body: JSON.stringify({fullPath: "/renamed/path2"}),
+          body: JSON.stringify({fullPath: "/totally/separate/path2"}),
         }),
         {params: Promise.resolve({id: "concurrent-rename"})},
       );
 
       const [response1, response2] = await Promise.allSettled([rename1, rename2]);
+
+      // Debug: Log what actually happened
+      // console.log("Response 1:", response1.status, response1.status === "fulfilled" ? response1.value.status : response1.reason);
+      // console.log("Response 2:", response2.status, response2.status === "fulfilled" ? response2.value.status : response2.reason);
 
       // One should succeed, one should fail
       expect(
@@ -471,6 +520,12 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       const parentDir = {
         id: "integrity-parent",
         fullPath: "/integrity/parent",
+        parentId: null,
+        userId: mockUser,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: mockDate,
+        updatedAt: mockDate,
         files: [],
         children: [{id: "integrity-child", fullPath: "/integrity/parent/child"}],
         _count: {files: 0, children: 1},
@@ -483,6 +538,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       (prisma.directory.update as jest.Mock).mockResolvedValue({
         ...parentDir,
         fullPath: "/integrity/moved",
+        updatedAt: mockDate,
         _count: {files: 0, children: 1},
       });
 
@@ -538,6 +594,12 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       const rapidOperations = Array.from({length: 50}, (_, i) => ({
         id: `rapid-${i}`,
         fullPath: `/rapid/test-${i}`,
+        parentId: null,
+        userId: mockUser,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: mockDate,
+        updatedAt: mockDate,
         _count: {files: 0, children: 0},
       }));
 
