@@ -48,18 +48,18 @@ export function FileList({refreshTrigger, onFileSelect}: FileListProps) {
 
       const params = new URLSearchParams();
       params.append("limit", "50");
-      
+
       if (filterStatus !== "all") {
         params.append("filter~status", filterStatus);
       }
       if (filterPermissions !== "all") {
         params.append("filter~permissions", filterPermissions);
       }
-      
+
       params.append("order_by", `${sortBy}+${sortOrder}`);
 
       const response = await fetch(`/api/v1/files?${params}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch files");
       }
@@ -77,9 +77,10 @@ export function FileList({refreshTrigger, onFileSelect}: FileListProps) {
     fetchFiles();
   }, [refreshTrigger, filterStatus, filterPermissions, sortBy, sortOrder, fetchFiles]);
 
-  const filteredFiles = files.filter(file =>
-    file.filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    file.fullPath.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredFiles = files.filter(
+    (file) =>
+      file.filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      file.fullPath.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleDeleteFile = async (fileId: string) => {
@@ -175,13 +176,13 @@ export function FileList({refreshTrigger, onFileSelect}: FileListProps) {
           type="text"
           placeholder="Search files..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600 focus:outline-none"
         />
 
         <select
           value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
+          onChange={(e) => setFilterStatus(e.target.value)}
           className="px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600 focus:outline-none"
         >
           <option value="all">All Status</option>
@@ -192,7 +193,7 @@ export function FileList({refreshTrigger, onFileSelect}: FileListProps) {
 
         <select
           value={filterPermissions}
-          onChange={e => setFilterPermissions(e.target.value)}
+          onChange={(e) => setFilterPermissions(e.target.value)}
           className="px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600 focus:outline-none"
         >
           <option value="all">All Permissions</option>
@@ -202,7 +203,7 @@ export function FileList({refreshTrigger, onFileSelect}: FileListProps) {
 
         <select
           value={`${sortBy}+${sortOrder}`}
-          onChange={e => {
+          onChange={(e) => {
             const [field, order] = e.target.value.split("+");
             setSortBy(field);
             setSortOrder(order as "asc" | "desc");
@@ -235,7 +236,7 @@ export function FileList({refreshTrigger, onFileSelect}: FileListProps) {
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredFiles.map(file => (
+          {filteredFiles.map((file) => (
             <FileItem
               key={file.id}
               file={file}

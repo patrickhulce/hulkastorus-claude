@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
   const handleUploadComplete = (fileId: string) => {
     console.log("Upload completed for file:", fileId);
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   const handleDragOver = (e: React.DragEvent) => {

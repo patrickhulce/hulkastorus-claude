@@ -50,11 +50,7 @@ export function FileItem({file, onSelect, onDelete, formatFileSize, formatDate}:
       label: status,
     };
 
-    return (
-      <span className={`px-2 py-1 rounded text-xs ${config.color}`}>
-        {config.label}
-      </span>
-    );
+    return <span className={`px-2 py-1 rounded text-xs ${config.color}`}>{config.label}</span>;
   };
 
   const getExpirationInfo = () => {
@@ -80,7 +76,7 @@ export function FileItem({file, onSelect, onDelete, formatFileSize, formatDate}:
   const handleDownload = async () => {
     try {
       const response = await fetch(`/api/v1/files/${file.id}/download`);
-      
+
       if (response.status === 307) {
         // Follow redirect to actual download URL
         const downloadUrl = response.headers.get("Location");
@@ -99,12 +95,13 @@ export function FileItem({file, onSelect, onDelete, formatFileSize, formatDate}:
     setCopying(true);
     try {
       const baseUrl = window.location.origin;
-      const link = file.permissions === "public" 
-        ? `${baseUrl}/d/${file.id}`
-        : `${baseUrl}/api/v1/files/${file.id}/download`;
-      
+      const link =
+        file.permissions === "public"
+          ? `${baseUrl}/d/${file.id}`
+          : `${baseUrl}/api/v1/files/${file.id}/download`;
+
       await navigator.clipboard.writeText(link);
-      
+
       // Show feedback
       setTimeout(() => setCopying(false), 1000);
     } catch {
@@ -122,34 +119,30 @@ export function FileItem({file, onSelect, onDelete, formatFileSize, formatDate}:
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="text-2xl flex-shrink-0">
-            {getFileIcon(file.mimeType)}
-          </div>
-          
+          <div className="text-2xl flex-shrink-0">{getFileIcon(file.mimeType)}</div>
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-medium text-white truncate">
-                {file.filename}
-              </h4>
+              <h4 className="font-medium text-white truncate">{file.filename}</h4>
               {getStatusBadge(file.status)}
-              <span className={`px-2 py-1 rounded text-xs ${
-                file.permissions === "public" 
-                  ? "bg-blue-900 text-blue-300" 
-                  : "bg-gray-700 text-gray-300"
-              }`}>
+              <span
+                className={`px-2 py-1 rounded text-xs ${
+                  file.permissions === "public"
+                    ? "bg-blue-900 text-blue-300"
+                    : "bg-gray-700 text-gray-300"
+                }`}
+              >
                 {file.permissions === "public" ? "🌐 Public" : "🔒 Private"}
               </span>
             </div>
-            
+
             <div className="text-sm text-gray-400">
               <div className="flex items-center gap-4">
                 <span>{file.fullPath}</span>
                 <span>{formatFileSize(file.sizeBytes)}</span>
                 <span>{formatDate(file.createdAt)}</span>
               </div>
-              <div className="mt-1">
-                {getExpirationInfo()}
-              </div>
+              <div className="mt-1">{getExpirationInfo()}</div>
             </div>
           </div>
         </div>
@@ -159,7 +152,7 @@ export function FileItem({file, onSelect, onDelete, formatFileSize, formatDate}:
           <div className="flex items-center gap-2 ml-4">
             {file.status === "validated" && (
               <button
-                onClick={e => {
+                onClick={(e) => {
                   e.stopPropagation();
                   handleDownload();
                 }}
@@ -169,9 +162,9 @@ export function FileItem({file, onSelect, onDelete, formatFileSize, formatDate}:
                 ⬇️
               </button>
             )}
-            
+
             <button
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 handleCopyLink();
               }}
@@ -182,7 +175,7 @@ export function FileItem({file, onSelect, onDelete, formatFileSize, formatDate}:
             </button>
 
             <button
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 onDelete?.();
               }}

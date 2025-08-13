@@ -22,7 +22,12 @@ interface UploadState {
   fileId?: string;
 }
 
-export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath = "/"}: FileUploadModalProps) {
+export function FileUploadModal({
+  isOpen,
+  onClose,
+  onUploadComplete,
+  initialPath = "/",
+}: FileUploadModalProps) {
   const [uploadState, setUploadState] = useState<UploadState>({
     file: null,
     progress: 0,
@@ -62,23 +67,26 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
     }
   };
 
-  const handleFileSelect = useCallback((files: FileList | File[]) => {
-    const file = files[0] as FileWithPath;
-    if (!file) return;
+  const handleFileSelect = useCallback(
+    (files: FileList | File[]) => {
+      const file = files[0] as FileWithPath;
+      if (!file) return;
 
-    setUploadState({
-      file,
-      progress: 0,
-      status: "idle",
-    });
+      setUploadState({
+        file,
+        progress: 0,
+        status: "idle",
+      });
 
-    // Generate a default path from the file name if none provided
-    if (!fullPath) {
-      const fileName = file.name;
-      const defaultPath = initialPath === "/" ? `/${fileName}` : `${initialPath}/${fileName}`;
-      setFullPath(defaultPath);
-    }
-  }, [fullPath, initialPath]);
+      // Generate a default path from the file name if none provided
+      if (!fullPath) {
+        const fileName = file.name;
+        const defaultPath = initialPath === "/" ? `/${fileName}` : `${initialPath}/${fileName}`;
+        setFullPath(defaultPath);
+      }
+    },
+    [fullPath, initialPath],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -90,17 +98,20 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const files = e.dataTransfer.files;
-    handleFileSelect(files);
-  }, [handleFileSelect]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      const files = e.dataTransfer.files;
+      handleFileSelect(files);
+    },
+    [handleFileSelect],
+  );
 
   const uploadFile = async () => {
     if (!uploadState.file) return;
 
-    setUploadState(prev => ({...prev, status: "uploading", progress: 0}));
+    setUploadState((prev) => ({...prev, status: "uploading", progress: 0}));
 
     try {
       // Step 1: Create file record and get upload URL
@@ -126,7 +137,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
 
       const {uploadUrl, id: fileId} = await createResponse.json();
 
-      setUploadState(prev => ({...prev, fileId, progress: 25}));
+      setUploadState((prev) => ({...prev, fileId, progress: 25}));
 
       // Step 2: Upload file to R2
       const uploadResponse = await fetch(uploadUrl, {
@@ -141,7 +152,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
         throw new Error("Failed to upload file to storage");
       }
 
-      setUploadState(prev => ({...prev, progress: 75, status: "validating"}));
+      setUploadState((prev) => ({...prev, progress: 75, status: "validating"}));
 
       // Step 3: Validate upload
       const validateResponse = await fetch(`/api/v1/files/${fileId}/status`, {
@@ -159,7 +170,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
         throw new Error(errorData.error || "Failed to validate upload");
       }
 
-      setUploadState(prev => ({...prev, progress: 100, status: "completed"}));
+      setUploadState((prev) => ({...prev, progress: 100, status: "completed"}));
 
       // Call completion callback
       if (onUploadComplete && fileId) {
@@ -171,7 +182,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
         handleClose();
       }, 2000);
     } catch (error) {
-      setUploadState(prev => ({
+      setUploadState((prev) => ({
         ...prev,
         status: "error",
         error: error instanceof Error ? error.message : "Upload failed",
@@ -216,7 +227,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                onChange={e => e.target.files && handleFileSelect(e.target.files)}
+                onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
               />
             </div>
           )}
@@ -253,7 +264,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
                     <input
                       type="text"
                       value={fullPath}
-                      onChange={e => setFullPath(e.target.value)}
+                      onChange={(e) => setFullPath(e.target.value)}
                       placeholder="/path/to/file.ext"
                       className="w-full px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600 focus:outline-none"
                     />
@@ -266,7 +277,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
                     <label className="block text-sm font-medium mb-2">Permissions</label>
                     <select
                       value={permissions}
-                      onChange={e => setPermissions(e.target.value as "public" | "private")}
+                      onChange={(e) => setPermissions(e.target.value as "public" | "private")}
                       className="w-full px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600 focus:outline-none"
                     >
                       <option value="private">Private - Only you can access</option>
@@ -278,7 +289,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
                     <label className="block text-sm font-medium mb-2">Expiration</label>
                     <select
                       value={expirationPolicy}
-                      onChange={e =>
+                      onChange={(e) =>
                         setExpirationPolicy(e.target.value as "infinite" | "1d" | "7d" | "30d")
                       }
                       className="w-full px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600 focus:outline-none"
@@ -327,7 +338,7 @@ export function FileUploadModal({isOpen, onClose, onUploadComplete, initialPath 
             {uploadState.status === "error" && (
               <button
                 onClick={() =>
-                  setUploadState(prev => ({...prev, status: "idle", error: undefined}))
+                  setUploadState((prev) => ({...prev, status: "idle", error: undefined}))
                 }
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors"
               >

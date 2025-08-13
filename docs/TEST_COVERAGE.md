@@ -17,13 +17,13 @@ This document provides an overview of the comprehensive test suites added for th
 
 Based on the latest test run:
 
-| Component | Statements | Branches | Functions | Lines | 
-|-----------|------------|----------|-----------|-------|
-| File API Routes | 84.61% | 81.25% | 100% | 86.27% |
-| Directory API Routes | 87.93% | 82.69% | 100% | 87.71% |
-| Directory ID Routes | 90.32% | 82.95% | 100% | 90.32% |
-| R2 Client | 17.5% | 10% | 10% | 17.5% |
-| R2 Config | 68.75% | 71.42% | 33.33% | 68.75% |
+| Component            | Statements | Branches | Functions | Lines  |
+| -------------------- | ---------- | -------- | --------- | ------ |
+| File API Routes      | 84.61%     | 81.25%   | 100%      | 86.27% |
+| Directory API Routes | 87.93%     | 82.69%   | 100%      | 87.71% |
+| Directory ID Routes  | 90.32%     | 82.95%   | 100%      | 90.32% |
+| R2 Client            | 17.5%      | 10%      | 10%       | 17.5%  |
+| R2 Config            | 68.75%     | 71.42%   | 33.33%    | 68.75% |
 
 **Overall API Coverage: 77-90%**
 
@@ -32,13 +32,15 @@ Based on the latest test run:
 ### 1. Unit Tests
 
 #### File API Tests (`tests/unit/file-api-comprehensive.test.ts`)
+
 - **55 test cases covering:**
   - GET /api/v1/files/:id (6 tests)
-  - PUT /api/v1/files/:id (7 tests)  
+  - PUT /api/v1/files/:id (7 tests)
   - DELETE /api/v1/files/:id (6 tests)
   - Edge cases and security (5 tests)
 
 **Key scenarios tested:**
+
 - File access by owners vs non-owners
 - Public vs private file permissions
 - File expiration handling
@@ -52,6 +54,7 @@ Based on the latest test run:
 - Concurrent operations
 
 #### Directory API Tests (`tests/unit/directory-api-comprehensive.test.ts`)
+
 - **40 test cases covering:**
   - GET /api/v1/directories/:id (4 tests)
   - PUT /api/v1/directories/:id (7 tests)
@@ -61,6 +64,7 @@ Based on the latest test run:
   - Edge cases and security (6 tests)
 
 **Key scenarios tested:**
+
 - Directory creation with nested paths
 - Directory renames with cascading updates
 - Circular reference prevention
@@ -74,12 +78,14 @@ Based on the latest test run:
 ### 2. Integration Tests
 
 #### File-Directory Lifecycle (`tests/integration/file-directory-management.test.ts`)
+
 - **12 comprehensive integration tests**
 - End-to-end workflows combining multiple API calls
 - Transaction handling and rollback scenarios
 - Bulk operations with batching
 
-#### Directory Edge Cases (`tests/integration/directory-edge-cases.test.ts`) 
+#### Directory Edge Cases (`tests/integration/directory-edge-cases.test.ts`)
+
 - **25 specialized edge case tests**
 - Path normalization with various formats
 - Deep directory hierarchies (20+ levels)
@@ -89,6 +95,7 @@ Based on the latest test run:
 - Data integrity validation
 
 #### Error Scenarios (`tests/integration/error-scenarios.test.ts`)
+
 - **35+ error handling tests**
 - Authentication failures
 - Database connection issues
@@ -102,6 +109,7 @@ Based on the latest test run:
 ### 3. Performance Tests
 
 #### Performance & Stress Testing (`tests/performance/file-directory-performance.test.ts`)
+
 - **15 performance benchmark tests**
 - Bulk file operations (1000+ files)
 - Deep directory structures (50+ levels)
@@ -114,18 +122,21 @@ Based on the latest test run:
 ## Test Features
 
 ### Mocking Strategy
+
 - **Prisma ORM**: Comprehensive mocking of all database operations
 - **Authentication**: Mock auth service with various user scenarios
 - **R2 Storage**: Mock cloud storage with error simulation
 - **Time**: Consistent date mocking for reliable tests
 
 ### Test Utilities
+
 - **Performance measurement**: Execution time and memory tracking
 - **Error simulation**: Database, network, and service failures
 - **Data generation**: Realistic test data with edge cases
 - **Concurrent testing**: Race condition and load simulation
 
 ### Security Testing
+
 - **Input validation**: Malformed JSON, type mismatches, missing fields
 - **Injection attacks**: SQL, NoSQL, XSS payload testing
 - **Path traversal**: Directory traversal attempt prevention
@@ -135,16 +146,18 @@ Based on the latest test run:
 ## Coverage Gaps and Recommendations
 
 ### Areas with Lower Coverage
+
 1. **R2 Client** (17.5% coverage)
    - Network error handling
    - Retry mechanisms
    - Connection pooling
 
-2. **Authentication Integration** 
+2. **Authentication Integration**
    - Session management edge cases
    - Token expiration scenarios
 
 ### Recommended Additions
+
 1. **End-to-End Tests**: Browser automation with real file uploads
 2. **Load Testing**: Production-scale traffic simulation
 3. **Database Integration**: Real database transaction testing
@@ -153,11 +166,13 @@ Based on the latest test run:
 ## Running the Tests
 
 ### All Tests
+
 ```bash
 npm run test:unit
 ```
 
 ### Specific Test Suites
+
 ```bash
 # Unit tests only
 npm run test:unit tests/unit/
@@ -174,6 +189,7 @@ npm run test:unit tests/unit/directory-api-comprehensive.test.ts
 ```
 
 ### Coverage Report
+
 ```bash
 npm run test:unit -- --coverage
 ```

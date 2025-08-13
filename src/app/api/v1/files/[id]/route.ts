@@ -16,7 +16,7 @@ const updateFileSchema = z.object({
 // Helper function to calculate expiration date
 function calculateExpirationDate(policy: string): Date | null {
   if (policy === "infinite") return null;
-  
+
   const now = new Date();
   const expirationMap: Record<string, number> = {
     "1d": 1,
@@ -25,10 +25,10 @@ function calculateExpirationDate(policy: string): Date | null {
     "90d": 90,
     "1y": 365,
   };
-  
+
   const days = expirationMap[policy];
   if (!days) return null;
-  
+
   now.setDate(now.getDate() + days);
   return now;
 }
@@ -36,7 +36,7 @@ function calculateExpirationDate(policy: string): Date | null {
 // PUT /api/v1/files/:id - Update file metadata
 export async function PUT(request: NextRequest, {params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
-  
+
   try {
     const session = await auth();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +58,7 @@ export async function PUT(request: NextRequest, {params}: {params: Promise<{id: 
       },
       include: {
         directory: true,
-      }
+      },
     });
 
     if (!file) {
@@ -74,66 +74,67 @@ export async function PUT(request: NextRequest, {params}: {params: Promise<{id: 
       expirationPolicy?: string;
       expiresAt?: Date | null;
     } = {};
-    
+
     if (validatedData.filename !== undefined) {
       updateData.filename = validatedData.filename;
     }
-    
+
     if (validatedData.permissions !== undefined) {
       updateData.permissions = validatedData.permissions;
     }
-    
+
     if (validatedData.expirationPolicy !== undefined) {
       updateData.expirationPolicy = validatedData.expirationPolicy;
       updateData.expiresAt = calculateExpirationDate(validatedData.expirationPolicy);
     }
-    
+
     // Handle directory change and path update
     if (validatedData.directoryId !== undefined || validatedData.fullPath !== undefined) {
       let targetDirectoryId = validatedData.directoryId || file.directoryId;
       let targetPath = validatedData.fullPath || file.fullPath;
-      
+
       // If changing directory, verify it exists and belongs to the user
       if (validatedData.directoryId && validatedData.directoryId !== file.directoryId) {
         const targetDirectory = await prisma.directory.findFirst({
           where: {
             id: validatedData.directoryId,
             userId,
-          }
+          },
         });
-        
+
         if (!targetDirectory) {
           return NextResponse.json({error: "Target directory not found"}, {status: 404});
         }
-        
+
         // Update the full path to reflect the new directory
         if (!validatedData.fullPath) {
-          targetPath = targetDirectory.fullPath === "/" 
-            ? `/${file.filename}`
-            : `${targetDirectory.fullPath}/${file.filename}`;
+          targetPath =
+            targetDirectory.fullPath === "/"
+              ? `/${file.filename}`
+              : `${targetDirectory.fullPath}/${file.filename}`;
         }
       }
-      
+
       // If changing path, ensure parent directories exist
       if (validatedData.fullPath && validatedData.fullPath !== file.fullPath) {
         const pathParts = targetPath.split("/").filter(Boolean);
         const filename = pathParts.pop() || file.filename;
-        
+
         if (pathParts.length > 0) {
           // Create or find parent directories
           let currentPath = "";
           let parentDirectoryId = null;
-          
+
           for (const part of pathParts) {
             currentPath = currentPath ? `${currentPath}/${part}` : `/${part}`;
-            
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const directory: any = await prisma.directory.upsert({
               where: {
                 userId_fullPath: {
                   userId,
                   fullPath: currentPath,
-                }
+                },
               },
               update: {},
               create: {
@@ -143,23 +144,23 @@ export async function PUT(request: NextRequest, {params}: {params: Promise<{id: 
                 parentId: parentDirectoryId,
                 defaultPermissions: "private",
                 defaultExpirationPolicy: "infinite",
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              } as any
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              } as any,
             });
-            
+
             parentDirectoryId = directory.id;
           }
-          
+
           targetDirectoryId = parentDirectoryId || targetDirectoryId;
         }
-        
+
         updateData.filename = filename;
       }
-      
+
       updateData.directoryId = targetDirectoryId;
       updateData.fullPath = targetPath;
     }
-    
+
     // Update the file
     const updatedFile = await prisma.file.update({
       where: {id},
@@ -171,9 +172,9 @@ export async function PUT(request: NextRequest, {params}: {params: Promise<{id: 
         directory: {
           select: {
             fullPath: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // Return updated file
@@ -192,14 +193,13 @@ export async function PUT(request: NextRequest, {params}: {params: Promise<{id: 
       createdAt: updatedFile.createdAt.toISOString(),
       updatedAt: updatedFile.updatedAt.toISOString(),
     });
-    
   } catch (error) {
     console.error("Error updating file:", error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json({error: "Validation error", details: error.issues}, {status: 400});
     }
-    
+
     return NextResponse.json({error: "Internal server error"}, {status: 500});
   }
 }
@@ -207,7 +207,7 @@ export async function PUT(request: NextRequest, {params}: {params: Promise<{id: 
 // DELETE /api/v1/files/:id - Delete a file
 export async function DELETE(request: NextRequest, {params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
-  
+
   try {
     const session = await auth();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -222,7 +222,7 @@ export async function DELETE(request: NextRequest, {params}: {params: Promise<{i
       where: {
         id,
         userId,
-      }
+      },
     });
 
     if (!file) {
@@ -234,17 +234,17 @@ export async function DELETE(request: NextRequest, {params}: {params: Promise<{i
       try {
         const r2Client = getR2Client();
         const locatorParts = file.r2Locator.split("/");
-        
+
         if (locatorParts.length === 4) {
           const [env, lifecyclePolicy, storedUserId, fileId] = locatorParts;
-          
+
           await r2Client.deleteObject({
             env,
             lifecyclePolicy,
             userId: storedUserId,
             fileId,
           });
-          
+
           console.log(`Deleted file from R2: ${file.r2Locator}`);
         }
       } catch (r2Error) {
@@ -256,11 +256,10 @@ export async function DELETE(request: NextRequest, {params}: {params: Promise<{i
 
     // Delete from database
     await prisma.file.delete({
-      where: {id}
+      where: {id},
     });
 
     return NextResponse.json({message: "File deleted successfully"});
-    
   } catch (error) {
     console.error("Error deleting file:", error);
     return NextResponse.json({error: "Internal server error"}, {status: 500});
@@ -270,7 +269,7 @@ export async function DELETE(request: NextRequest, {params}: {params: Promise<{i
 // GET /api/v1/files/:id - Get file metadata
 export async function GET(request: NextRequest, {params}: {params: Promise<{id: string}>}) {
   const {id} = await params;
-  
+
   try {
     const session = await auth();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -286,16 +285,16 @@ export async function GET(request: NextRequest, {params}: {params: Promise<{id: 
             fullPath: true,
             defaultPermissions: true,
             defaultExpirationPolicy: true,
-          }
+          },
         },
         user: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!file) {
@@ -305,7 +304,7 @@ export async function GET(request: NextRequest, {params}: {params: Promise<{id: 
     // Check access permissions
     const isOwner = file.userId === userId;
     const isPublic = file.permissions === "public";
-    
+
     if (!isOwner && !isPublic) {
       return NextResponse.json({error: "File not found"}, {status: 404});
     }
@@ -331,16 +330,20 @@ export async function GET(request: NextRequest, {params}: {params: Promise<{id: 
       createdAt: file.createdAt.toISOString(),
       updatedAt: file.updatedAt.toISOString(),
       // Include owner info for public files
-      owner: isPublic ? {
-        id: file.user.id,
-        name: `${file.user.firstName} ${file.user.lastName}`,
-      } : undefined,
+      owner: isPublic
+        ? {
+            id: file.user.id,
+            name: `${file.user.firstName} ${file.user.lastName}`,
+          }
+        : undefined,
       // Include download URL for accessible files
-      downloadUrl: file.status === "validated" ? 
-        (isPublic ? `/d/${file.id}` : `/api/v1/files/${file.id}/download`) : 
-        undefined,
+      downloadUrl:
+        file.status === "validated"
+          ? isPublic
+            ? `/d/${file.id}`
+            : `/api/v1/files/${file.id}/download`
+          : undefined,
     });
-    
   } catch (error) {
     console.error("Error getting file:", error);
     return NextResponse.json({error: "Internal server error"}, {status: 500});

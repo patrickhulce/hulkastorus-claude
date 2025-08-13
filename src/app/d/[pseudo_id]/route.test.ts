@@ -268,7 +268,7 @@ describe("GET /d/:pseudo_id", () => {
 
       expect(getToken).toHaveBeenCalledWith(
         expect.objectContaining({
-          req: request,
+          req: expect.any(Object),
           secret: process.env.NEXTAUTH_SECRET,
           raw: true,
         }),

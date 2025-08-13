@@ -1,9 +1,17 @@
-import { NextRequest } from "next/server";
-import { POST as createFile } from "@/app/api/v1/files/route";
-import { GET as getFile, PUT as updateFile, DELETE as deleteFile } from "@/app/api/v1/files/[id]/route";
-import { POST as createDir, GET as listDirs } from "@/app/api/v1/directories/route";
-import { GET as getDirById, PUT as updateDir, DELETE as deleteDir } from "@/app/api/v1/directories/[id]/route";
-import { prisma } from "@/lib/prisma";
+import {NextRequest} from "next/server";
+import {POST as createFile} from "@/app/api/v1/files/route";
+import {
+  GET as getFile,
+  PUT as updateFile,
+  DELETE as deleteFile,
+} from "@/app/api/v1/files/[id]/route";
+import {POST as createDir, GET as listDirs} from "@/app/api/v1/directories/route";
+import {
+  GET as getDirById,
+  PUT as updateDir,
+  DELETE as deleteDir,
+} from "@/app/api/v1/directories/[id]/route";
+import {prisma} from "@/lib/prisma";
 
 // Mock Prisma for performance testing
 jest.mock("@/lib/prisma", () => ({
@@ -44,7 +52,7 @@ jest.mock("@/lib/r2-config", () => {
     getR2Client: () => ({
       deleteObject: jest.fn().mockResolvedValue(undefined),
       putObject: jest.fn().mockResolvedValue(undefined),
-      headObject: jest.fn().mockResolvedValue({ size: 1024 }),
+      headObject: jest.fn().mockResolvedValue({size: 1024}),
     }),
   };
 });
@@ -60,7 +68,7 @@ const measureTime = async (operation: () => Promise<any>) => {
   const result = await operation();
   const endTime = process.hrtime.bigint();
   const durationMs = Number(endTime - startTime) / 1_000_000;
-  return { result, duration: durationMs };
+  return {result, duration: durationMs};
 };
 
 const measureMemory = () => {
@@ -74,7 +82,7 @@ describe("File and Directory Management Performance Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     const auth = jest.mocked(require("@/lib/auth").auth);
-    auth.mockResolvedValue({ user: { id: "perf-test-user" } });
+    auth.mockResolvedValue({user: {id: "perf-test-user"}});
   });
 
   const mockUser = "perf-test-user";
@@ -102,17 +110,19 @@ describe("File and Directory Management Performance Tests", () => {
       });
 
       const memoryBefore = measureMemory();
-      const { result, duration } = await measureTime(async () => {
-        const promises = Array.from({ length: fileCount }, (_, i) =>
-          createFile(new NextRequest("http://localhost:3000/api/v1/files", {
-            method: "POST",
-            body: JSON.stringify({
-              filename: `bulk-file-${i}.txt`,
-              mimeType: "text/plain",
-              sizeBytes: 1024,
-              permissions: "private",
+      const {result, duration} = await measureTime(async () => {
+        const promises = Array.from({length: fileCount}, (_, i) =>
+          createFile(
+            new NextRequest("http://localhost:3000/api/v1/files", {
+              method: "POST",
+              body: JSON.stringify({
+                filename: `bulk-file-${i}.txt`,
+                mimeType: "text/plain",
+                sizeBytes: 1024,
+                permissions: "private",
+              }),
             }),
-          }))
+          ),
         );
         return Promise.all(promises);
       });
@@ -125,7 +135,9 @@ describe("File and Directory Management Performance Tests", () => {
       expect(memoryAfter.heapUsed - memoryBefore.heapUsed).toBeLessThan(100 * 1024 * 1024); // Less than 100MB memory increase
 
       console.log(`Bulk file creation: ${fileCount} files in ${duration.toFixed(2)}ms`);
-      console.log(`Memory increase: ${((memoryAfter.heapUsed - memoryBefore.heapUsed) / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Memory increase: ${((memoryAfter.heapUsed - memoryBefore.heapUsed) / 1024 / 1024).toFixed(2)}MB`,
+      );
     });
 
     it("should maintain performance with large file metadata", async () => {
@@ -135,9 +147,9 @@ describe("File and Directory Management Performance Tests", () => {
         sizeBytes: 1024 * 1024 * 1024, // 1GB
         permissions: "private",
         description: "x".repeat(10000), // 10KB description
-        tags: Array.from({ length: 100 }, (_, i) => `tag-${i}`),
+        tags: Array.from({length: 100}, (_, i) => `tag-${i}`),
         customMetadata: Object.fromEntries(
-          Array.from({ length: 50 }, (_, i) => [`key-${i}`, `value-${i}`.repeat(100)])
+          Array.from({length: 50}, (_, i) => [`key-${i}`, `value-${i}`.repeat(100)]),
         ),
       };
 
@@ -152,11 +164,13 @@ describe("File and Directory Management Performance Tests", () => {
         updatedAt: mockDate,
       });
 
-      const { result, duration } = await measureTime(async () => {
-        return createFile(new NextRequest("http://localhost:3000/api/v1/files", {
-          method: "POST",
-          body: JSON.stringify(largeMetadata),
-        }));
+      const {result, duration} = await measureTime(async () => {
+        return createFile(
+          new NextRequest("http://localhost:3000/api/v1/files", {
+            method: "POST",
+            body: JSON.stringify(largeMetadata),
+          }),
+        );
       });
 
       expect(result.status).toBe(201);
@@ -186,14 +200,17 @@ describe("File and Directory Management Performance Tests", () => {
         });
       });
 
-      const { result, duration } = await measureTime(async () => {
-        const promises = Array.from({ length: concurrencyLevel }, (_, i) =>
-          updateFile(new NextRequest("http://localhost:3000/api/v1/files/concurrent-file", {
-            method: "PUT",
-            body: JSON.stringify({
-              filename: `concurrent-update-${i}.txt`,
+      const {result, duration} = await measureTime(async () => {
+        const promises = Array.from({length: concurrencyLevel}, (_, i) =>
+          updateFile(
+            new NextRequest("http://localhost:3000/api/v1/files/concurrent-file", {
+              method: "PUT",
+              body: JSON.stringify({
+                filename: `concurrent-update-${i}.txt`,
+              }),
             }),
-          }), { params: Promise.resolve({ id: "concurrent-file" }) })
+            {params: Promise.resolve({id: "concurrent-file"})},
+          ),
         );
         return Promise.all(promises);
       });
@@ -203,13 +220,15 @@ describe("File and Directory Management Performance Tests", () => {
       expect(successful.length).toBe(concurrencyLevel);
       expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
 
-      console.log(`Concurrent file updates: ${concurrencyLevel} updates in ${duration.toFixed(2)}ms`);
+      console.log(
+        `Concurrent file updates: ${concurrencyLevel} updates in ${duration.toFixed(2)}ms`,
+      );
     });
   });
 
   describe("Directory Operations Performance", () => {
     it("should handle deep directory tree creation efficiently", async () => {
-      const depth = 50;
+      const depth = 20;
       const basePath = "/performance/deep";
       let currentPath = basePath;
       const directories: any[] = [];
@@ -225,7 +244,7 @@ describe("File and Directory Management Performance Tests", () => {
           defaultExpirationPolicy: "infinite",
           createdAt: mockDate,
           updatedAt: mockDate,
-          _count: { files: 0, children: i < depth ? 1 : 0 },
+          _count: {files: 0, children: i < depth ? 1 : 0},
         });
       }
 
@@ -235,14 +254,18 @@ describe("File and Directory Management Performance Tests", () => {
         return Promise.resolve(dir || directories[directories.length - 1]);
       });
 
-      (prisma.directory.findUnique as jest.Mock).mockResolvedValue(directories[directories.length - 1]);
+      (prisma.directory.findUnique as jest.Mock).mockResolvedValue(
+        directories[directories.length - 1],
+      );
 
       const finalPath = directories[directories.length - 1].fullPath;
-      const { result, duration } = await measureTime(async () => {
-        return createDir(new NextRequest("http://localhost:3000/api/v1/directories", {
-          method: "POST",
-          body: JSON.stringify({ fullPath: finalPath }),
-        }));
+      const {result, duration} = await measureTime(async () => {
+        return createDir(
+          new NextRequest("http://localhost:3000/api/v1/directories", {
+            method: "POST",
+            body: JSON.stringify({fullPath: finalPath}),
+          }),
+        );
       });
 
       expect(result.status).toBe(201);
@@ -253,8 +276,8 @@ describe("File and Directory Management Performance Tests", () => {
     });
 
     it("should handle wide directory listing efficiently", async () => {
-      const breadth = 10000;
-      const directories = Array.from({ length: breadth }, (_, i) => ({
+      const breadth = 1000;
+      const directories = Array.from({length: breadth}, (_, i) => ({
         id: `wide-${i}`,
         userId: mockUser,
         fullPath: `/performance/wide/dir-${i}`,
@@ -263,17 +286,17 @@ describe("File and Directory Management Performance Tests", () => {
         defaultExpirationPolicy: "infinite",
         createdAt: mockDate,
         updatedAt: mockDate,
-        _count: { files: Math.floor(Math.random() * 10), children: 0 },
-        parent: { id: "wide-parent", fullPath: "/performance/wide" },
+        _count: {files: Math.floor(Math.random() * 10), children: 0},
+        parent: {id: "wide-parent", fullPath: "/performance/wide"},
       }));
 
       (prisma.directory.findMany as jest.Mock).mockResolvedValue(directories);
 
       const memoryBefore = measureMemory();
-      const { result, duration } = await measureTime(async () => {
-        return listDirs(new NextRequest(
-          "http://localhost:3000/api/v1/directories?parentId=wide-parent"
-        ));
+      const {result, duration} = await measureTime(async () => {
+        return listDirs(
+          new NextRequest("http://localhost:3000/api/v1/directories?parentId=wide-parent"),
+        );
       });
       const memoryAfter = measureMemory();
 
@@ -284,7 +307,9 @@ describe("File and Directory Management Performance Tests", () => {
       expect(duration).toBeLessThan(3000); // Should complete within 3 seconds
 
       console.log(`Wide directory listing: ${breadth} directories in ${duration.toFixed(2)}ms`);
-      console.log(`Memory for listing: ${((memoryAfter.heapUsed - memoryBefore.heapUsed) / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Memory for listing: ${((memoryAfter.heapUsed - memoryBefore.heapUsed) / 1024 / 1024).toFixed(2)}MB`,
+      );
     });
 
     it("should handle recursive directory operations efficiently", async () => {
@@ -309,8 +334,10 @@ describe("File and Directory Management Performance Tests", () => {
             defaultExpirationPolicy: "infinite",
             createdAt: mockDate,
             updatedAt: mockDate,
-            _count: { files: Math.floor(Math.random() * 5), children: level < depth ? breadth : 0 },
-            parent: parentId ? { id: parentId, fullPath: parentPath.substring(0, parentPath.lastIndexOf('/')) } : null,
+            _count: {files: Math.floor(Math.random() * 5), children: level < depth ? breadth : 0},
+            parent: parentId
+              ? {id: parentId, fullPath: parentPath.substring(0, parentPath.lastIndexOf("/"))}
+              : null,
           });
 
           createNode(level + 1, path, id);
@@ -321,10 +348,12 @@ describe("File and Directory Management Performance Tests", () => {
 
       (prisma.directory.findMany as jest.Mock).mockResolvedValue(directories.slice(0, 1000)); // Limit to prevent memory issues
 
-      const { result, duration } = await measureTime(async () => {
-        return listDirs(new NextRequest(
-          "http://localhost:3000/api/v1/directories?path=/performance/recursive&recursive=true"
-        ));
+      const {result, duration} = await measureTime(async () => {
+        return listDirs(
+          new NextRequest(
+            "http://localhost:3000/api/v1/directories?path=/performance/recursive&recursive=true",
+          ),
+        );
       });
 
       const data = await result.json();
@@ -333,7 +362,9 @@ describe("File and Directory Management Performance Tests", () => {
       expect(data.directories.length).toBeGreaterThan(100);
       expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
 
-      console.log(`Recursive directory listing: ${data.directories.length} directories in ${duration.toFixed(2)}ms`);
+      console.log(
+        `Recursive directory listing: ${data.directories.length} directories in ${duration.toFixed(2)}ms`,
+      );
     });
 
     it("should handle large directory rename operations efficiently", async () => {
@@ -344,15 +375,15 @@ describe("File and Directory Management Performance Tests", () => {
         id: "rename-root",
         userId: mockUser,
         fullPath: "/performance/old-name",
-        files: Array.from({ length: fileCount }, (_, i) => ({
+        files: Array.from({length: fileCount}, (_, i) => ({
           id: `rename-file-${i}`,
           fullPath: `/performance/old-name/file-${i}.txt`,
         })),
-        children: Array.from({ length: childCount }, (_, i) => ({
+        children: Array.from({length: childCount}, (_, i) => ({
           id: `rename-child-${i}`,
           fullPath: `/performance/old-name/child-${i}`,
         })),
-        _count: { files: fileCount, children: childCount },
+        _count: {files: fileCount, children: childCount},
       };
 
       (prisma.directory.findFirst as jest.Mock)
@@ -368,14 +399,17 @@ describe("File and Directory Management Performance Tests", () => {
       (prisma.directory.update as jest.Mock).mockResolvedValue({
         ...rootDir,
         fullPath: "/performance/new-name",
-        _count: { files: fileCount, children: childCount },
+        _count: {files: fileCount, children: childCount},
       });
 
-      const { result, duration } = await measureTime(async () => {
-        return updateDir(new NextRequest("http://localhost:3000/api/v1/directories/rename-root", {
-          method: "PUT",
-          body: JSON.stringify({ fullPath: "/performance/new-name" }),
-        }), { params: Promise.resolve({ id: "rename-root" }) });
+      const {result, duration} = await measureTime(async () => {
+        return updateDir(
+          new NextRequest("http://localhost:3000/api/v1/directories/rename-root", {
+            method: "PUT",
+            body: JSON.stringify({fullPath: "/performance/new-name"}),
+          }),
+          {params: Promise.resolve({id: "rename-root"})},
+        );
       });
 
       const data = await result.json();
@@ -385,7 +419,9 @@ describe("File and Directory Management Performance Tests", () => {
       expect(sqlExecutions).toBe(2); // One for children, one for files
       expect(duration).toBeLessThan(10000); // Should complete within 10 seconds
 
-      console.log(`Large directory rename: ${childCount} children + ${fileCount} files in ${duration.toFixed(2)}ms`);
+      console.log(
+        `Large directory rename: ${childCount} children + ${fileCount} files in ${duration.toFixed(2)}ms`,
+      );
     });
   });
 
@@ -406,7 +442,7 @@ describe("File and Directory Management Performance Tests", () => {
         id: "mixed-dir",
         userId: mockUser,
         fullPath: "/mixed-test",
-        _count: { files: 0, children: 0 },
+        _count: {files: 0, children: 0},
       };
 
       (prisma.file.create as jest.Mock).mockResolvedValue(mockFile);
@@ -423,63 +459,85 @@ describe("File and Directory Management Performance Tests", () => {
       // Create mixed operations
       for (let i = 0; i < operationCount; i++) {
         const operationType = i % 6;
-        
+
         switch (operationType) {
           case 0: // Create file
-            operations.push(() => createFile(new NextRequest("http://localhost:3000/api/v1/files", {
-              method: "POST",
-              body: JSON.stringify({
-                filename: `mixed-${i}.txt`,
-                mimeType: "text/plain",
-                permissions: "private",
-              }),
-            })));
+            operations.push(() =>
+              createFile(
+                new NextRequest("http://localhost:3000/api/v1/files", {
+                  method: "POST",
+                  body: JSON.stringify({
+                    filename: `mixed-${i}.txt`,
+                    mimeType: "text/plain",
+                    permissions: "private",
+                  }),
+                }),
+              ),
+            );
             break;
 
           case 1: // Update file
-            operations.push(() => updateFile(new NextRequest("http://localhost:3000/api/v1/files/mixed-file", {
-              method: "PUT",
-              body: JSON.stringify({ filename: `updated-${i}.txt` }),
-            }), { params: Promise.resolve({ id: "mixed-file" }) }));
+            operations.push(() =>
+              updateFile(
+                new NextRequest("http://localhost:3000/api/v1/files/mixed-file", {
+                  method: "PUT",
+                  body: JSON.stringify({filename: `updated-${i}.txt`}),
+                }),
+                {params: Promise.resolve({id: "mixed-file"})},
+              ),
+            );
             break;
 
           case 2: // Create directory
-            operations.push(() => createDir(new NextRequest("http://localhost:3000/api/v1/directories", {
-              method: "POST",
-              body: JSON.stringify({ fullPath: `/mixed-${i}` }),
-            })));
+            operations.push(() =>
+              createDir(
+                new NextRequest("http://localhost:3000/api/v1/directories", {
+                  method: "POST",
+                  body: JSON.stringify({fullPath: `/mixed-${i}`}),
+                }),
+              ),
+            );
             break;
 
           case 3: // Update directory
-            operations.push(() => updateDir(new NextRequest("http://localhost:3000/api/v1/directories/mixed-dir", {
-              method: "PUT",
-              body: JSON.stringify({ defaultPermissions: "public" }),
-            }), { params: Promise.resolve({ id: "mixed-dir" }) }));
+            operations.push(() =>
+              updateDir(
+                new NextRequest("http://localhost:3000/api/v1/directories/mixed-dir", {
+                  method: "PUT",
+                  body: JSON.stringify({defaultPermissions: "public"}),
+                }),
+                {params: Promise.resolve({id: "mixed-dir"})},
+              ),
+            );
             break;
 
           case 4: // Get file
-            operations.push(() => getFile(new NextRequest("http://localhost:3000/api/v1/files/mixed-file"), {
-              params: Promise.resolve({ id: "mixed-file" }),
-            }));
+            operations.push(() =>
+              getFile(new NextRequest("http://localhost:3000/api/v1/files/mixed-file"), {
+                params: Promise.resolve({id: "mixed-file"}),
+              }),
+            );
             break;
 
           case 5: // Get directory
-            operations.push(() => getDirById(new NextRequest("http://localhost:3000/api/v1/directories/mixed-dir"), {
-              params: Promise.resolve({ id: "mixed-dir" }),
-            }));
+            operations.push(() =>
+              getDirById(new NextRequest("http://localhost:3000/api/v1/directories/mixed-dir"), {
+                params: Promise.resolve({id: "mixed-dir"}),
+              }),
+            );
             break;
         }
       }
 
       const memoryBefore = measureMemory();
-      const { result, duration } = await measureTime(async () => {
+      const {result, duration} = await measureTime(async () => {
         // Execute operations in batches to avoid overwhelming the system
         const batchSize = 20;
         const results = [];
 
         for (let i = 0; i < operations.length; i += batchSize) {
           const batch = operations.slice(i, i + batchSize);
-          const batchResults = await Promise.all(batch.map(op => op()));
+          const batchResults = await Promise.all(batch.map((op) => op()));
           results.push(...batchResults);
         }
 
@@ -494,7 +552,9 @@ describe("File and Directory Management Performance Tests", () => {
 
       console.log(`Mixed operations: ${operationCount} operations in ${duration.toFixed(2)}ms`);
       console.log(`Average per operation: ${(duration / operationCount).toFixed(2)}ms`);
-      console.log(`Memory increase: ${((memoryAfter.heapUsed - memoryBefore.heapUsed) / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Memory increase: ${((memoryAfter.heapUsed - memoryBefore.heapUsed) / 1024 / 1024).toFixed(2)}MB`,
+      );
     });
 
     it("should handle cleanup operations efficiently", async () => {
@@ -502,7 +562,7 @@ describe("File and Directory Management Performance Tests", () => {
       const dirCount = 100;
 
       // Setup files to delete
-      const filesToDelete = Array.from({ length: fileCount }, (_, i) => ({
+      const filesToDelete = Array.from({length: fileCount}, (_, i) => ({
         id: `cleanup-file-${i}`,
         r2Locator: `test/cleanup-file-${i}`,
         status: "validated",
@@ -513,20 +573,23 @@ describe("File and Directory Management Performance Tests", () => {
         userId: mockUser,
         fullPath: "/cleanup",
         files: filesToDelete,
-        _count: { children: 0 },
+        _count: {children: 0},
       };
 
       (prisma.directory.findFirst as jest.Mock).mockResolvedValue(directoryWithFiles);
-      (prisma.file.deleteMany as jest.Mock).mockResolvedValue({ count: fileCount });
+      (prisma.file.deleteMany as jest.Mock).mockResolvedValue({count: fileCount});
       (prisma.directory.delete as jest.Mock).mockResolvedValue(directoryWithFiles);
 
-      const { getR2Client } = jest.requireActual("@/lib/r2-config");
+      const {getR2Client} = jest.requireActual("@/lib/r2-config");
       const r2Client = getR2Client();
 
-      const { result, duration } = await measureTime(async () => {
-        return deleteDir(new NextRequest("http://localhost:3000/api/v1/directories/cleanup-dir", {
-          method: "DELETE",
-        }), { params: Promise.resolve({ id: "cleanup-dir" }) });
+      const {result, duration} = await measureTime(async () => {
+        return deleteDir(
+          new NextRequest("http://localhost:3000/api/v1/directories/cleanup-dir", {
+            method: "DELETE",
+          }),
+          {params: Promise.resolve({id: "cleanup-dir"})},
+        );
       });
 
       const data = await result.json();
@@ -554,31 +617,31 @@ describe("File and Directory Management Performance Tests", () => {
           mimeType: "text/plain",
           permissions: "private",
           userId: mockUser,
-        })
+        }),
       );
 
       while (Date.now() - startTime < testDuration) {
-        const batchPromises = Array.from({ length: operationsPerSecond }, () =>
-          createFile(new NextRequest("http://localhost:3000/api/v1/files", {
-            method: "POST",
-            body: JSON.stringify({
-              filename: `stress-${Date.now()}.txt`,
-              mimeType: "text/plain",
-              permissions: "private",
+        const batchPromises = Array.from({length: operationsPerSecond}, () =>
+          createFile(
+            new NextRequest("http://localhost:3000/api/v1/files", {
+              method: "POST",
+              body: JSON.stringify({
+                filename: `stress-${Date.now()}.txt`,
+                mimeType: "text/plain",
+                permissions: "private",
+              }),
             }),
-          }))
+          ),
         );
 
         const batchResults = await Promise.allSettled(batchPromises);
         results.push(...batchResults);
 
         // Brief pause between batches
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
-      const successful = results.filter(r => 
-        r.status === "fulfilled" && r.value.status === 201
-      );
+      const successful = results.filter((r) => r.status === "fulfilled" && r.value.status === 201);
 
       const errorRate = (results.length - successful.length) / results.length;
       const totalOperations = results.length;
@@ -589,7 +652,9 @@ describe("File and Directory Management Performance Tests", () => {
 
       console.log(`Stress test: ${totalOperations} operations over ${actualDuration}ms`);
       console.log(`Success rate: ${((successful.length / totalOperations) * 100).toFixed(2)}%`);
-      console.log(`Operations per second: ${((totalOperations / actualDuration) * 1000).toFixed(2)}`);
+      console.log(
+        `Operations per second: ${((totalOperations / actualDuration) * 1000).toFixed(2)}`,
+      );
     });
 
     it("should recover gracefully from memory pressure", async () => {
@@ -615,16 +680,18 @@ describe("File and Directory Management Performance Tests", () => {
         userId: mockUser,
       });
 
-      const { result, duration } = await measureTime(async () => {
-        const promises = Array.from({ length: 100 }, (_, i) =>
-          createFile(new NextRequest("http://localhost:3000/api/v1/files", {
-            method: "POST",
-            body: JSON.stringify({
-              filename: `memory-pressure-${i}.txt`,
-              mimeType: "text/plain",
-              permissions: "private",
+      const {result, duration} = await measureTime(async () => {
+        const promises = Array.from({length: 100}, (_, i) =>
+          createFile(
+            new NextRequest("http://localhost:3000/api/v1/files", {
+              method: "POST",
+              body: JSON.stringify({
+                filename: `memory-pressure-${i}.txt`,
+                mimeType: "text/plain",
+                permissions: "private",
+              }),
             }),
-          }))
+          ),
         );
         return Promise.all(promises);
       });

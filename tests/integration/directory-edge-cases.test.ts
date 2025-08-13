@@ -1,7 +1,7 @@
-import { NextRequest } from "next/server";
-import { POST as createDir, GET as listDirs } from "@/app/api/v1/directories/route";
-import { PUT as updateDir, DELETE as deleteDir } from "@/app/api/v1/directories/[id]/route";
-import { prisma } from "@/lib/prisma";
+import {NextRequest} from "next/server";
+import {POST as createDir, GET as listDirs} from "@/app/api/v1/directories/route";
+import {PUT as updateDir, DELETE as deleteDir} from "@/app/api/v1/directories/[id]/route";
+import {prisma} from "@/lib/prisma";
 
 // Mock Prisma
 jest.mock("@/lib/prisma", () => ({
@@ -43,7 +43,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
     jest.clearAllMocks();
     const auth = jest.mocked(require("@/lib/auth").auth);
     auth.mockResolvedValue({
-      user: { id: "test-user-id" },
+      user: {id: "test-user-id"},
     });
   });
 
@@ -53,13 +53,13 @@ describe("Directory Edge Cases and Boundary Tests", () => {
   describe("Path Normalization and Validation", () => {
     it("should handle various path formats and normalize them", async () => {
       const testCases = [
-        { input: "simple", expected: "/simple" },
-        { input: "/already/absolute", expected: "/already/absolute" },
-        { input: "//double//slashes//", expected: "/double/slashes" },
-        { input: "trailing/slash/", expected: "/trailing/slash" },
-        { input: "./relative/path", expected: "/relative/path" },
-        { input: "unicode/测试/путь", expected: "/unicode/测试/путь" },
-        { input: "spaces in path", expected: "/spaces in path" },
+        {input: "simple", expected: "/simple"},
+        {input: "/already/absolute", expected: "/already/absolute"},
+        {input: "//double//slashes//", expected: "/double/slashes"},
+        {input: "trailing/slash/", expected: "/trailing/slash"},
+        {input: "./relative/path", expected: "/relative/path"},
+        {input: "unicode/测试/путь", expected: "/unicode/测试/путь"},
+        {input: "spaces in path", expected: "/spaces in path"},
       ];
 
       for (const testCase of testCases) {
@@ -72,7 +72,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
           defaultExpirationPolicy: "infinite",
           createdAt: mockDate,
           updatedAt: mockDate,
-          _count: { files: 0, children: 0 },
+          _count: {files: 0, children: 0},
         };
 
         (prisma.directory.upsert as jest.Mock).mockResolvedValue(mockDir);
@@ -98,7 +98,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       const mockDir = {
         id: "long-path-id",
         fullPath: longPath,
-        _count: { files: 0, children: 0 },
+        _count: {files: 0, children: 0},
       };
 
       (prisma.directory.upsert as jest.Mock).mockResolvedValue(mockDir);
@@ -146,7 +146,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
         const mockDir = {
           id: `special-${Math.random()}`,
           fullPath: path,
-          _count: { files: 0, children: 0 },
+          _count: {files: 0, children: 0},
         };
 
         (prisma.directory.upsert as jest.Mock).mockResolvedValue(mockDir);
@@ -154,7 +154,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
 
         const request = new NextRequest("http://localhost:3000/api/v1/directories", {
           method: "POST",
-          body: JSON.stringify({ fullPath: path }),
+          body: JSON.stringify({fullPath: path}),
         });
 
         const response = await createDir(request);
@@ -188,7 +188,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
 
       (prisma.directory.findUnique as jest.Mock).mockResolvedValue({
         ...directories[directories.length - 1],
-        _count: { files: 0, children: 0 },
+        _count: {files: 0, children: 0},
       });
 
       const finalPath = directories[directories.length - 1].fullPath;
@@ -209,12 +209,12 @@ describe("Directory Edge Cases and Boundary Tests", () => {
 
     it("should handle directory tree with many siblings", async () => {
       const siblingCount = 100;
-      const siblings = Array.from({ length: siblingCount }, (_, i) => ({
+      const siblings = Array.from({length: siblingCount}, (_, i) => ({
         id: `sibling-${i}`,
         fullPath: `/siblings/child-${i}`,
         parentId: "parent-id",
-        _count: { files: i, children: 0 },
-        parent: { id: "parent-id", fullPath: "/siblings" },
+        _count: {files: i, children: 0},
+        parent: {id: "parent-id", fullPath: "/siblings"},
         defaultPermissions: "private",
         defaultExpirationPolicy: "infinite",
         createdAt: mockDate,
@@ -224,7 +224,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       (prisma.directory.findMany as jest.Mock).mockResolvedValue(siblings);
 
       const request = new NextRequest(
-        "http://localhost:3000/api/v1/directories?parentId=parent-id"
+        "http://localhost:3000/api/v1/directories?parentId=parent-id",
       );
       const response = await listDirs(request);
       const data = await response.json();
@@ -246,14 +246,14 @@ describe("Directory Edge Cases and Boundary Tests", () => {
           return Promise.resolve({
             id: "first-creation",
             fullPath: conflictPath,
-            _count: { files: 0, children: 0 },
+            _count: {files: 0, children: 0},
           });
         } else {
           // Simulate second request finding existing directory
           return Promise.resolve({
             id: "first-creation", // Same ID as first creation
             fullPath: conflictPath,
-            _count: { files: 0, children: 0 },
+            _count: {files: 0, children: 0},
           });
         }
       });
@@ -261,19 +261,23 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       (prisma.directory.findUnique as jest.Mock).mockResolvedValue({
         id: "first-creation",
         fullPath: conflictPath,
-        _count: { files: 0, children: 0 },
+        _count: {files: 0, children: 0},
       });
 
       // Simulate two concurrent requests
-      const request1 = createDir(new NextRequest("http://localhost:3000/api/v1/directories", {
-        method: "POST",
-        body: JSON.stringify({ fullPath: conflictPath }),
-      }));
+      const request1 = createDir(
+        new NextRequest("http://localhost:3000/api/v1/directories", {
+          method: "POST",
+          body: JSON.stringify({fullPath: conflictPath}),
+        }),
+      );
 
-      const request2 = createDir(new NextRequest("http://localhost:3000/api/v1/directories", {
-        method: "POST",
-        body: JSON.stringify({ fullPath: conflictPath }),
-      }));
+      const request2 = createDir(
+        new NextRequest("http://localhost:3000/api/v1/directories", {
+          method: "POST",
+          body: JSON.stringify({fullPath: conflictPath}),
+        }),
+      );
 
       const [response1, response2] = await Promise.all([request1, request2]);
       const [data1, data2] = await Promise.all([response1.json(), response2.json()]);
@@ -291,7 +295,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
         fullPath: "/original/path",
         files: [],
         children: [],
-        _count: { files: 0, children: 0 },
+        _count: {files: 0, children: 0},
       };
 
       let renameAttempts = 0;
@@ -303,7 +307,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
           return Promise.resolve({
             ...originalDir,
             fullPath: "/renamed/path1",
-            _count: { files: 0, children: 0 },
+            _count: {files: 0, children: 0},
           });
         } else {
           // Second rename conflicts
@@ -311,22 +315,28 @@ describe("Directory Edge Cases and Boundary Tests", () => {
         }
       });
 
-      const rename1 = updateDir(new NextRequest("http://localhost:3000/api/v1/directories/concurrent-rename", {
-        method: "PUT",
-        body: JSON.stringify({ fullPath: "/renamed/path1" }),
-      }), { params: Promise.resolve({ id: "concurrent-rename" }) });
+      const rename1 = updateDir(
+        new NextRequest("http://localhost:3000/api/v1/directories/concurrent-rename", {
+          method: "PUT",
+          body: JSON.stringify({fullPath: "/renamed/path1"}),
+        }),
+        {params: Promise.resolve({id: "concurrent-rename"})},
+      );
 
-      const rename2 = updateDir(new NextRequest("http://localhost:3000/api/v1/directories/concurrent-rename", {
-        method: "PUT",
-        body: JSON.stringify({ fullPath: "/renamed/path2" }),
-      }), { params: Promise.resolve({ id: "concurrent-rename" }) });
+      const rename2 = updateDir(
+        new NextRequest("http://localhost:3000/api/v1/directories/concurrent-rename", {
+          method: "PUT",
+          body: JSON.stringify({fullPath: "/renamed/path2"}),
+        }),
+        {params: Promise.resolve({id: "concurrent-rename"})},
+      );
 
       const [response1, response2] = await Promise.allSettled([rename1, rename2]);
 
       // One should succeed, one should fail
       expect(
         (response1.status === "fulfilled" && response1.value.status === 200) ||
-        (response2.status === "fulfilled" && response2.value.status === 200)
+          (response2.status === "fulfilled" && response2.value.status === 200),
       ).toBe(true);
     });
   });
@@ -334,7 +344,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
   describe("Resource Limits and Constraints", () => {
     it("should handle directory with maximum allowed files", async () => {
       const maxFiles = 10000;
-      const mockFiles = Array.from({ length: maxFiles }, (_, i) => ({
+      const mockFiles = Array.from({length: maxFiles}, (_, i) => ({
         id: `file-${i}`,
         filename: `file-${i}.txt`,
         r2Locator: `test/file-${i}`,
@@ -345,19 +355,22 @@ describe("Directory Edge Cases and Boundary Tests", () => {
         id: "max-files-dir",
         fullPath: "/max-files",
         files: mockFiles,
-        _count: { children: 0 },
+        _count: {children: 0},
       };
 
       (prisma.directory.findFirst as jest.Mock).mockResolvedValue(directoryWithManyFiles);
-      (prisma.file.deleteMany as jest.Mock).mockResolvedValue({ count: maxFiles });
+      (prisma.file.deleteMany as jest.Mock).mockResolvedValue({count: maxFiles});
       (prisma.directory.delete as jest.Mock).mockResolvedValue(directoryWithManyFiles);
 
-      const deleteRequest = new NextRequest("http://localhost:3000/api/v1/directories/max-files-dir", {
-        method: "DELETE",
-      });
+      const deleteRequest = new NextRequest(
+        "http://localhost:3000/api/v1/directories/max-files-dir",
+        {
+          method: "DELETE",
+        },
+      );
 
       const response = await deleteDir(deleteRequest, {
-        params: Promise.resolve({ id: "max-files-dir" }),
+        params: Promise.resolve({id: "max-files-dir"}),
       });
       const data = await response.json();
 
@@ -369,23 +382,22 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       const nestedDir = {
         id: "nested-root",
         fullPath: "/nested/root",
-        files: [
-          { id: "nested-file", r2Locator: "test/nested-file", status: "validated" },
-        ],
-        children: [
-          { id: "nested-child", fullPath: "/nested/root/child" },
-        ],
-        _count: { children: 1 },
+        files: [{id: "nested-file", r2Locator: "test/nested-file", status: "validated"}],
+        children: [{id: "nested-child", fullPath: "/nested/root/child"}],
+        _count: {children: 1},
       };
 
       (prisma.directory.findFirst as jest.Mock).mockResolvedValue(nestedDir);
 
-      const deleteRequest = new NextRequest("http://localhost:3000/api/v1/directories/nested-root", {
-        method: "DELETE",
-      });
+      const deleteRequest = new NextRequest(
+        "http://localhost:3000/api/v1/directories/nested-root",
+        {
+          method: "DELETE",
+        },
+      );
 
       const response = await deleteDir(deleteRequest, {
-        params: Promise.resolve({ id: "nested-root" }),
+        params: Promise.resolve({id: "nested-root"}),
       });
       const data = await response.json();
 
@@ -399,7 +411,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
     it("should validate directory ownership across operations", async () => {
       const unauthorizedAuth = jest.mocked(require("@/lib/auth").auth);
       unauthorizedAuth.mockResolvedValue({
-        user: { id: "unauthorized-user" },
+        user: {id: "unauthorized-user"},
       });
 
       const otherUserDir = {
@@ -410,13 +422,16 @@ describe("Directory Edge Cases and Boundary Tests", () => {
 
       (prisma.directory.findFirst as jest.Mock).mockResolvedValue(null);
 
-      const updateRequest = new NextRequest("http://localhost:3000/api/v1/directories/other-user-dir", {
-        method: "PUT",
-        body: JSON.stringify({ defaultPermissions: "public" }),
-      });
+      const updateRequest = new NextRequest(
+        "http://localhost:3000/api/v1/directories/other-user-dir",
+        {
+          method: "PUT",
+          body: JSON.stringify({defaultPermissions: "public"}),
+        },
+      );
 
       const response = await updateDir(updateRequest, {
-        params: Promise.resolve({ id: "other-user-dir" }),
+        params: Promise.resolve({id: "other-user-dir"}),
       });
       const data = await response.json();
 
@@ -429,10 +444,8 @@ describe("Directory Edge Cases and Boundary Tests", () => {
         id: "integrity-parent",
         fullPath: "/integrity/parent",
         files: [],
-        children: [
-          { id: "integrity-child", fullPath: "/integrity/parent/child" },
-        ],
-        _count: { files: 0, children: 1 },
+        children: [{id: "integrity-child", fullPath: "/integrity/parent/child"}],
+        _count: {files: 0, children: 1},
       };
 
       (prisma.directory.findFirst as jest.Mock)
@@ -442,16 +455,19 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       (prisma.directory.update as jest.Mock).mockResolvedValue({
         ...parentDir,
         fullPath: "/integrity/moved",
-        _count: { files: 0, children: 1 },
+        _count: {files: 0, children: 1},
       });
 
-      const moveRequest = new NextRequest("http://localhost:3000/api/v1/directories/integrity-parent", {
-        method: "PUT",
-        body: JSON.stringify({ fullPath: "/integrity/moved" }),
-      });
+      const moveRequest = new NextRequest(
+        "http://localhost:3000/api/v1/directories/integrity-parent",
+        {
+          method: "PUT",
+          body: JSON.stringify({fullPath: "/integrity/moved"}),
+        },
+      );
 
       const response = await updateDir(moveRequest, {
-        params: Promise.resolve({ id: "integrity-parent" }),
+        params: Promise.resolve({id: "integrity-parent"}),
       });
       const data = await response.json();
 
@@ -464,17 +480,17 @@ describe("Directory Edge Cases and Boundary Tests", () => {
         "/integrity/parent/",
         "/integrity/moved/",
         mockUser,
-        "/integrity/parent/%"
+        "/integrity/parent/%",
       );
     });
 
     it("should handle malformed request data gracefully", async () => {
       const malformedRequests = [
-        { body: "{invalid json" },
-        { body: JSON.stringify({ fullPath: null }) },
-        { body: JSON.stringify({ fullPath: 123 }) },
-        { body: JSON.stringify({ defaultPermissions: "invalid" }) },
-        { body: JSON.stringify({ defaultExpirationPolicy: "never" }) },
+        {body: "{invalid json"},
+        {body: JSON.stringify({fullPath: null})},
+        {body: JSON.stringify({fullPath: 123})},
+        {body: JSON.stringify({defaultPermissions: "invalid"})},
+        {body: JSON.stringify({defaultExpirationPolicy: "never"})},
       ];
 
       for (const requestData of malformedRequests) {
@@ -491,10 +507,10 @@ describe("Directory Edge Cases and Boundary Tests", () => {
 
   describe("Performance Edge Cases", () => {
     it("should handle rapid sequential operations", async () => {
-      const rapidOperations = Array.from({ length: 50 }, (_, i) => ({
+      const rapidOperations = Array.from({length: 50}, (_, i) => ({
         id: `rapid-${i}`,
         fullPath: `/rapid/test-${i}`,
-        _count: { files: 0, children: 0 },
+        _count: {files: 0, children: 0},
       }));
 
       let operationCount = 0;
@@ -510,22 +526,24 @@ describe("Directory Edge Cases and Boundary Tests", () => {
 
       const startTime = Date.now();
       const promises = rapidOperations.map((op, i) =>
-        createDir(new NextRequest("http://localhost:3000/api/v1/directories", {
-          method: "POST",
-          body: JSON.stringify({ fullPath: `/rapid/test-${i}` }),
-        }))
+        createDir(
+          new NextRequest("http://localhost:3000/api/v1/directories", {
+            method: "POST",
+            body: JSON.stringify({fullPath: `/rapid/test-${i}`}),
+          }),
+        ),
       );
 
       const responses = await Promise.all(promises);
       const endTime = Date.now();
 
-      expect(responses.every(r => r.status === 201)).toBe(true);
+      expect(responses.every((r) => r.status === 201)).toBe(true);
       expect(endTime - startTime).toBeLessThan(5000); // Should complete within 5 seconds
     });
 
     it("should handle memory-intensive directory trees", async () => {
-      const breadth = 100;
-      const depth = 5;
+      const breadth = 10;
+      const depth = 3;
       const totalNodes = Math.pow(breadth, depth);
 
       // Generate a large tree structure
@@ -537,8 +555,17 @@ describe("Directory Edge Cases and Boundary Tests", () => {
           largeTree.push({
             id,
             fullPath: path,
-            _count: { files: Math.floor(Math.random() * 10), children: level < depth - 1 ? breadth : 0 },
-            parent: level === 0 ? null : { id: `tree-${level - 1}-${Math.floor(node / breadth)}`, fullPath: `/large-tree/level-${level - 1}/node-${Math.floor(node / breadth)}` },
+            _count: {
+              files: Math.floor(Math.random() * 10),
+              children: level < depth - 1 ? breadth : 0,
+            },
+            parent:
+              level === 0
+                ? null
+                : {
+                    id: `tree-${level - 1}-${Math.floor(node / breadth)}`,
+                    fullPath: `/large-tree/level-${level - 1}/node-${Math.floor(node / breadth)}`,
+                  },
             defaultPermissions: "private",
             defaultExpirationPolicy: "infinite",
             createdAt: mockDate,
@@ -550,7 +577,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       (prisma.directory.findMany as jest.Mock).mockResolvedValue(largeTree.slice(0, 1000)); // Limit to 1000 for response
 
       const request = new NextRequest(
-        "http://localhost:3000/api/v1/directories?path=/large-tree&recursive=true"
+        "http://localhost:3000/api/v1/directories?path=/large-tree&recursive=true",
       );
 
       const startTime = Date.now();

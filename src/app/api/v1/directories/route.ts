@@ -31,13 +31,13 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
-    const {fullPath, defaultPermissions, defaultExpirationPolicy} = 
+    const {fullPath, defaultPermissions, defaultExpirationPolicy} =
       createDirectorySchema.parse(body);
 
     // Normalize path
     const normalizedPath = fullPath.startsWith("/") ? fullPath : `/${fullPath}`;
     const pathParts = normalizedPath.split("/").filter(Boolean);
-    
+
     if (pathParts.length === 0) {
       return NextResponse.json({error: "Invalid path"}, {status: 400});
     }
@@ -49,21 +49,23 @@ export async function POST(request: NextRequest) {
 
     for (const part of pathParts) {
       currentPath = currentPath ? `${currentPath}/${part}` : `/${part}`;
-      
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const directory: any = await prisma.directory.upsert({
         where: {
           userId_fullPath: {
             userId,
             fullPath: currentPath,
-          }
+          },
         },
         update: {
           // Update default policies if this is the target directory
-          ...(currentPath === normalizedPath ? {
-            defaultPermissions,
-            defaultExpirationPolicy,
-          } : {})
+          ...(currentPath === normalizedPath
+            ? {
+                defaultPermissions,
+                defaultExpirationPolicy,
+              }
+            : {}),
         },
         create: {
           id: `dir_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -71,11 +73,12 @@ export async function POST(request: NextRequest) {
           fullPath: currentPath,
           parentId: currentParentId,
           defaultPermissions: currentPath === normalizedPath ? defaultPermissions : "private",
-          defaultExpirationPolicy: currentPath === normalizedPath ? defaultExpirationPolicy : "infinite",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any
+          defaultExpirationPolicy:
+            currentPath === normalizedPath ? defaultExpirationPolicy : "infinite",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
       });
-      
+
       currentParentId = directory.id;
       lastDirectory = directory;
     }
@@ -92,30 +95,32 @@ export async function POST(request: NextRequest) {
           select: {
             files: true,
             children: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
-    return NextResponse.json({
-      id: directoryWithStats!.id,
-      fullPath: directoryWithStats!.fullPath,
-      parentId: directoryWithStats!.parentId,
-      defaultPermissions: directoryWithStats!.defaultPermissions,
-      defaultExpirationPolicy: directoryWithStats!.defaultExpirationPolicy,
-      fileCount: directoryWithStats!._count.files,
-      subdirectoryCount: directoryWithStats!._count.children,
-      createdAt: directoryWithStats!.createdAt.toISOString(),
-      updatedAt: directoryWithStats!.updatedAt.toISOString(),
-    }, {status: 201});
-    
+    return NextResponse.json(
+      {
+        id: directoryWithStats!.id,
+        fullPath: directoryWithStats!.fullPath,
+        parentId: directoryWithStats!.parentId,
+        defaultPermissions: directoryWithStats!.defaultPermissions,
+        defaultExpirationPolicy: directoryWithStats!.defaultExpirationPolicy,
+        fileCount: directoryWithStats!._count.files,
+        subdirectoryCount: directoryWithStats!._count.children,
+        createdAt: directoryWithStats!.createdAt.toISOString(),
+        updatedAt: directoryWithStats!.updatedAt.toISOString(),
+      },
+      {status: 201},
+    );
   } catch (error) {
     console.error("Error creating directory:", error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json({error: "Validation error", details: error.issues}, {status: 400});
     }
-    
+
     return NextResponse.json({error: "Internal server error"}, {status: 500});
   }
 }
@@ -145,7 +150,7 @@ export async function GET(request: NextRequest) {
     const where: {
       userId: string;
       parentId?: string;
-      fullPath?: string | { startsWith: string };
+      fullPath?: string | {startsWith: string};
     } = {userId};
 
     if (validatedParams.parentId !== undefined) {
@@ -156,9 +161,9 @@ export async function GET(request: NextRequest) {
       if (validatedParams.recursive) {
         // Get all directories under this path
         where.fullPath = {
-          startsWith: validatedParams.path.endsWith("/") 
-            ? validatedParams.path 
-            : `${validatedParams.path}/`
+          startsWith: validatedParams.path.endsWith("/")
+            ? validatedParams.path
+            : `${validatedParams.path}/`,
         };
       } else {
         // Get exact path match
@@ -174,22 +179,22 @@ export async function GET(request: NextRequest) {
           select: {
             files: true,
             children: true,
-          }
+          },
         },
         parent: {
           select: {
             id: true,
             fullPath: true,
-          }
-        }
+          },
+        },
       },
       orderBy: {
         fullPath: "asc",
-      }
+      },
     });
 
     // Transform the results
-    const transformedDirectories = directories.map(dir => ({
+    const transformedDirectories = directories.map((dir) => ({
       id: dir.id,
       fullPath: dir.fullPath,
       parentId: dir.parentId,
@@ -206,14 +211,13 @@ export async function GET(request: NextRequest) {
       directories: transformedDirectories,
       total: transformedDirectories.length,
     });
-    
   } catch (error) {
     console.error("Error listing directories:", error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json({error: "Validation error", details: error.issues}, {status: 400});
     }
-    
+
     return NextResponse.json({error: "Internal server error"}, {status: 500});
   }
 }

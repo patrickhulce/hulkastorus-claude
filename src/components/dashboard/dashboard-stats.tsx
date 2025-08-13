@@ -145,7 +145,9 @@ export function DashboardStats({refreshTrigger}: DashboardStatsProps) {
 
         <div className="bg-gray-900 p-6 rounded-lg">
           <h3 className="text-lg font-semibold mb-2 text-gray-300">Storage Used</h3>
-          <div className="text-3xl font-bold text-white">{formatFileSize(stats.totalSizeBytes)}</div>
+          <div className="text-3xl font-bold text-white">
+            {formatFileSize(stats.totalSizeBytes)}
+          </div>
           <div className="text-sm text-gray-400 mt-1">Across all files</div>
         </div>
 
@@ -179,7 +181,7 @@ export function DashboardStats({refreshTrigger}: DashboardStatsProps) {
             <div className="text-gray-400 text-center py-8">No files uploaded yet</div>
           ) : (
             <div className="space-y-3">
-              {stats.recentFiles.map(file => (
+              {stats.recentFiles.map((file) => (
                 <div key={file.id} className="flex justify-between items-center py-2">
                   <div>
                     <div className="font-medium text-white truncate">{file.filename}</div>

@@ -12,7 +12,8 @@
       "Bash(pnpm prisma generate:*)",
       "Bash(pnpm test:*)",
       "Bash(npm test)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm test:*)"
     ],
     "deny": []
   }

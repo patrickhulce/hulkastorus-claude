@@ -5,11 +5,20 @@ import React, {useState} from "react";
 interface DirectoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateDirectory: (name: string, parentPath: string, permissions: "public" | "private" | "inherit") => Promise<void>;
+  onCreateDirectory: (
+    name: string,
+    parentPath: string,
+    permissions: "public" | "private" | "inherit",
+  ) => Promise<void>;
   parentPath: string;
 }
 
-export function DirectoryModal({isOpen, onClose, onCreateDirectory, parentPath}: DirectoryModalProps) {
+export function DirectoryModal({
+  isOpen,
+  onClose,
+  onCreateDirectory,
+  parentPath,
+}: DirectoryModalProps) {
   const [name, setName] = useState("");
   const [permissions, setPermissions] = useState<"public" | "private" | "inherit">("inherit");
   const [creating, setCreating] = useState(false);
@@ -17,7 +26,7 @@ export function DirectoryModal({isOpen, onClose, onCreateDirectory, parentPath}:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim()) {
       setError("Directory name is required");
       return;
@@ -77,7 +86,7 @@ export function DirectoryModal({isOpen, onClose, onCreateDirectory, parentPath}:
               <input
                 type="text"
                 value={name}
-                onChange={e => {
+                onChange={(e) => {
                   setName(e.target.value);
                   setError(null);
                 }}
@@ -109,7 +118,7 @@ export function DirectoryModal({isOpen, onClose, onCreateDirectory, parentPath}:
               <label className="block text-sm font-medium mb-2">Permissions</label>
               <select
                 value={permissions}
-                onChange={e => setPermissions(e.target.value as "public" | "private" | "inherit")}
+                onChange={(e) => setPermissions(e.target.value as "public" | "private" | "inherit")}
                 className="w-full px-3 py-2 bg-gray-800 rounded border border-gray-700 focus:border-gray-600 focus:outline-none"
                 disabled={creating}
               >
@@ -119,11 +128,7 @@ export function DirectoryModal({isOpen, onClose, onCreateDirectory, parentPath}:
               </select>
             </div>
 
-            {error && (
-              <div className="text-red-400 text-sm">
-                {error}
-              </div>
-            )}
+            {error && <div className="text-red-400 text-sm">{error}</div>}
 
             <div className="flex gap-3 pt-4">
               <button

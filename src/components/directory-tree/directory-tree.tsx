@@ -52,13 +52,13 @@ export function DirectoryTree({currentPath, onNavigate, onCreateDirectory}: Dire
     // Auto-expand directories in the current path
     const pathParts = currentPath.split("/").filter(Boolean);
     const newExpanded = new Set(expandedPaths);
-    
+
     let buildPath = "";
-    pathParts.forEach(part => {
+    pathParts.forEach((part) => {
       buildPath += "/" + part;
       newExpanded.add(buildPath);
     });
-    
+
     setExpandedPaths(newExpanded);
   }, [currentPath, expandedPaths]);
 
@@ -67,15 +67,15 @@ export function DirectoryTree({currentPath, onNavigate, onCreateDirectory}: Dire
     const rootDirs: Directory[] = [];
 
     // Create a map of all directories
-    dirs.forEach(dir => {
+    dirs.forEach((dir) => {
       pathMap.set(dir.fullPath, {...dir, children: []});
     });
 
     // Build the tree structure
-    dirs.forEach(dir => {
+    dirs.forEach((dir) => {
       const parentPath = dir.fullPath.substring(0, dir.fullPath.lastIndexOf("/")) || "/";
       const parent = pathMap.get(parentPath);
-      
+
       if (parent && parent.fullPath !== dir.fullPath) {
         parent.children!.push(pathMap.get(dir.fullPath)!);
       } else if (parentPath === "/") {
@@ -125,11 +125,11 @@ export function DirectoryTree({currentPath, onNavigate, onCreateDirectory}: Dire
           }`}
           style={{paddingLeft: `${(level + 1) * 12}px`}}
           onClick={() => onNavigate(dir.fullPath)}
-          onContextMenu={e => handleContextMenu(e, dir.fullPath)}
+          onContextMenu={(e) => handleContextMenu(e, dir.fullPath)}
         >
           {hasChildren ? (
             <button
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 toggleExpanded(dir.fullPath);
               }}
@@ -140,19 +140,15 @@ export function DirectoryTree({currentPath, onNavigate, onCreateDirectory}: Dire
           ) : (
             <div className="w-4" />
           )}
-          
+
           <span className="text-lg">📁</span>
           <span className="text-sm truncate flex-1">{dir.name}</span>
-          
-          {dir.permissions === "public" && (
-            <span className="text-xs text-blue-400">🌐</span>
-          )}
+
+          {dir.permissions === "public" && <span className="text-xs text-blue-400">🌐</span>}
         </div>
-        
+
         {hasChildren && isExpanded && (
-          <div>
-            {dir.children!.map(child => renderDirectoryItem(child, level + 1))}
-          </div>
+          <div>{dir.children!.map((child) => renderDirectoryItem(child, level + 1))}</div>
         )}
       </div>
     );
@@ -186,10 +182,7 @@ export function DirectoryTree({currentPath, onNavigate, onCreateDirectory}: Dire
     return (
       <div className="p-4">
         <div className="text-red-400 text-sm mb-2">Failed to load directories</div>
-        <button
-          onClick={fetchDirectories}
-          className="text-blue-400 hover:text-blue-300 text-sm"
-        >
+        <button onClick={fetchDirectories} className="text-blue-400 hover:text-blue-300 text-sm">
           Try Again
         </button>
       </div>
@@ -216,21 +209,17 @@ export function DirectoryTree({currentPath, onNavigate, onCreateDirectory}: Dire
             currentPath === "/" ? "bg-blue-900 text-blue-300" : ""
           }`}
           onClick={() => onNavigate("/")}
-          onContextMenu={e => handleContextMenu(e, "/")}
+          onContextMenu={(e) => handleContextMenu(e, "/")}
         >
           <span className="text-lg">🏠</span>
           <span className="text-sm">Home</span>
         </div>
 
         {/* Directory tree */}
-        <div className="mt-2">
-          {directoryTree.map(dir => renderDirectoryItem(dir))}
-        </div>
+        <div className="mt-2">{directoryTree.map((dir) => renderDirectoryItem(dir))}</div>
 
         {directoryTree.length === 0 && (
-          <div className="text-center py-4 text-gray-400 text-sm">
-            No directories found
-          </div>
+          <div className="text-center py-4 text-gray-400 text-sm">No directories found</div>
         )}
       </div>
 

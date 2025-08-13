@@ -1,10 +1,18 @@
-import { NextRequest } from "next/server";
-import { GET as getDirs, POST as createDir } from "@/app/api/v1/directories/route";
-import { GET as getDirById, PUT as updateDir, DELETE as deleteDir } from "@/app/api/v1/directories/[id]/route";
-import { POST as createFile } from "@/app/api/v1/files/route";
-import { GET as getFile, PUT as updateFile, DELETE as deleteFile } from "@/app/api/v1/files/[id]/route";
-import { prisma } from "@/lib/prisma";
-import { startMockR2Server, stopMockR2Server } from "../mocks/r2-server";
+import {NextRequest} from "next/server";
+import {GET as getDirs, POST as createDir} from "@/app/api/v1/directories/route";
+import {
+  GET as getDirById,
+  PUT as updateDir,
+  DELETE as deleteDir,
+} from "@/app/api/v1/directories/[id]/route";
+import {POST as createFile} from "@/app/api/v1/files/route";
+import {
+  GET as getFile,
+  PUT as updateFile,
+  DELETE as deleteFile,
+} from "@/app/api/v1/files/[id]/route";
+import {prisma} from "@/lib/prisma";
+import {startMockR2Server, stopMockR2Server} from "../mocks/r2-server";
 
 // Mock Prisma with comprehensive transaction support
 jest.mock("@/lib/prisma", () => ({
@@ -43,7 +51,7 @@ jest.mock("@/lib/r2-config", () => {
     ...originalModule,
     currentEnv: "test",
     getR2Client: () => {
-      const { R2Client } = jest.requireActual("@/lib/r2-client");
+      const {R2Client} = jest.requireActual("@/lib/r2-client");
       return new R2Client({
         endpoint: "http://localhost:9020",
         accessKeyId: "test",
@@ -75,7 +83,7 @@ describe("File and Directory Management Integration", () => {
     jest.clearAllMocks();
     const auth = jest.mocked(require("@/lib/auth").auth);
     auth.mockResolvedValue({
-      user: { id: "test-user-id" },
+      user: {id: "test-user-id"},
     });
   });
 
@@ -94,11 +102,11 @@ describe("File and Directory Management Integration", () => {
         defaultExpirationPolicy: "infinite",
         createdAt: mockDate,
         updatedAt: mockDate,
-        _count: { files: 0, children: 0 },
+        _count: {files: 0, children: 0},
       };
 
-      const mockParentDir = { id: "parent-dir-id", fullPath: "/projects" };
-      const mockSubDir = { id: "sub-dir-id", fullPath: "/projects/2024" };
+      const mockParentDir = {id: "parent-dir-id", fullPath: "/projects"};
+      const mockSubDir = {id: "sub-dir-id", fullPath: "/projects/2024"};
 
       (prisma.directory.upsert as jest.Mock)
         .mockResolvedValueOnce(mockParentDir)
@@ -182,7 +190,7 @@ describe("File and Directory Management Integration", () => {
       });
 
       const updateResponse = await updateFile(updateRequest, {
-        params: Promise.resolve({ id: "test-file-id" }),
+        params: Promise.resolve({id: "test-file-id"}),
       });
       const updatedFileData = await updateResponse.json();
 
@@ -215,7 +223,7 @@ describe("File and Directory Management Integration", () => {
       });
 
       const moveResponse = await updateFile(moveRequest, {
-        params: Promise.resolve({ id: "test-file-id" }),
+        params: Promise.resolve({id: "test-file-id"}),
       });
       const movedFileData = await moveResponse.json();
 
@@ -232,18 +240,21 @@ describe("File and Directory Management Integration", () => {
       (prisma.directory.update as jest.Mock).mockResolvedValue({
         ...mockDirectory,
         defaultPermissions: "public",
-        _count: { files: 0, children: 0 },
+        _count: {files: 0, children: 0},
       });
 
-      const updateDirRequest = new NextRequest("http://localhost:3000/api/v1/directories/root-dir-id", {
-        method: "PUT",
-        body: JSON.stringify({
-          defaultPermissions: "public",
-        }),
-      });
+      const updateDirRequest = new NextRequest(
+        "http://localhost:3000/api/v1/directories/root-dir-id",
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            defaultPermissions: "public",
+          }),
+        },
+      );
 
       const updateDirResponse = await updateDir(updateDirRequest, {
-        params: Promise.resolve({ id: "root-dir-id" }),
+        params: Promise.resolve({id: "root-dir-id"}),
       });
       const updatedDirData = await updateDirResponse.json();
 
@@ -259,7 +270,7 @@ describe("File and Directory Management Integration", () => {
       });
 
       const deleteFileResponse = await deleteFile(deleteFileRequest, {
-        params: Promise.resolve({ id: "test-file-id" }),
+        params: Promise.resolve({id: "test-file-id"}),
       });
       const deleteFileData = await deleteFileResponse.json();
 
@@ -270,16 +281,19 @@ describe("File and Directory Management Integration", () => {
       (prisma.directory.findFirst as jest.Mock).mockResolvedValue({
         ...mockDirectory,
         files: [],
-        _count: { children: 0 },
+        _count: {children: 0},
       });
       (prisma.directory.delete as jest.Mock).mockResolvedValue(mockDirectory);
 
-      const deleteDirRequest = new NextRequest("http://localhost:3000/api/v1/directories/root-dir-id", {
-        method: "DELETE",
-      });
+      const deleteDirRequest = new NextRequest(
+        "http://localhost:3000/api/v1/directories/root-dir-id",
+        {
+          method: "DELETE",
+        },
+      );
 
       const deleteDirResponse = await deleteDir(deleteDirRequest, {
-        params: Promise.resolve({ id: "root-dir-id" }),
+        params: Promise.resolve({id: "root-dir-id"}),
       });
       const deleteDirData = await deleteDirResponse.json();
 
@@ -289,14 +303,14 @@ describe("File and Directory Management Integration", () => {
 
     it("should handle bulk operations with transaction rollback", async () => {
       const mockDirectories = [
-        { id: "dir1", fullPath: "/bulk/test1", _count: { files: 2, children: 0 } },
-        { id: "dir2", fullPath: "/bulk/test2", _count: { files: 1, children: 0 } },
+        {id: "dir1", fullPath: "/bulk/test1", _count: {files: 2, children: 0}},
+        {id: "dir2", fullPath: "/bulk/test2", _count: {files: 1, children: 0}},
       ];
 
       const mockFiles = [
-        { id: "file1", directoryId: "dir1", r2Locator: "test/file1" },
-        { id: "file2", directoryId: "dir1", r2Locator: "test/file2" },
-        { id: "file3", directoryId: "dir2", r2Locator: "test/file3" },
+        {id: "file1", directoryId: "dir1", r2Locator: "test/file1"},
+        {id: "file2", directoryId: "dir1", r2Locator: "test/file2"},
+        {id: "file3", directoryId: "dir2", r2Locator: "test/file3"},
       ];
 
       // Simulate transaction with multiple directory operations
@@ -304,7 +318,7 @@ describe("File and Directory Management Integration", () => {
         // Execute all operations in sequence
         const results = [];
         for (const operation of operations) {
-          if (typeof operation === 'function') {
+          if (typeof operation === "function") {
             results.push(await operation(prisma));
           }
         }
@@ -312,18 +326,16 @@ describe("File and Directory Management Integration", () => {
       });
 
       (prisma.directory.findMany as jest.Mock).mockResolvedValue(mockDirectories);
-      (prisma.file.deleteMany as jest.Mock).mockResolvedValue({ count: 3 });
+      (prisma.file.deleteMany as jest.Mock).mockResolvedValue({count: 3});
       (prisma.directory.delete as jest.Mock)
         .mockResolvedValueOnce(mockDirectories[0])
         .mockResolvedValueOnce(mockDirectories[1]);
 
       // Test successful bulk deletion
-      const operations = mockDirectories.map((dir) => 
-        jest.fn().mockResolvedValue(dir)
-      );
+      const operations = mockDirectories.map((dir) => jest.fn().mockResolvedValue(dir));
 
       const transactionResult = await (prisma.$transaction as jest.Mock)(operations);
-      
+
       expect(transactionResult).toHaveLength(2);
       expect(prisma.$transaction).toHaveBeenCalledWith(operations);
     });
@@ -334,9 +346,9 @@ describe("File and Directory Management Integration", () => {
       const rootDir = {
         id: "root-id",
         fullPath: "/projects/old-name",
-        files: [{ id: "file1", fullPath: "/projects/old-name/file1.txt" }],
-        children: [{ id: "child1", fullPath: "/projects/old-name/subdir" }],
-        _count: { files: 1, children: 1 },
+        files: [{id: "file1", fullPath: "/projects/old-name/file1.txt"}],
+        children: [{id: "child1", fullPath: "/projects/old-name/subdir"}],
+        _count: {files: 1, children: 1},
       };
 
       (prisma.directory.findFirst as jest.Mock)
@@ -346,7 +358,7 @@ describe("File and Directory Management Integration", () => {
       (prisma.directory.update as jest.Mock).mockResolvedValue({
         ...rootDir,
         fullPath: "/projects/new-name",
-        _count: { files: 1, children: 1 },
+        _count: {files: 1, children: 1},
       });
 
       const renameRequest = new NextRequest("http://localhost:3000/api/v1/directories/root-id", {
@@ -357,7 +369,7 @@ describe("File and Directory Management Integration", () => {
       });
 
       const renameResponse = await updateDir(renameRequest, {
-        params: Promise.resolve({ id: "root-id" }),
+        params: Promise.resolve({id: "root-id"}),
       });
       const renamedDir = await renameResponse.json();
 
@@ -380,15 +392,18 @@ describe("File and Directory Management Integration", () => {
         .mockResolvedValueOnce(parentDir)
         .mockResolvedValueOnce(childDir);
 
-      const circularRequest = new NextRequest("http://localhost:3000/api/v1/directories/parent-id", {
-        method: "PUT",
-        body: JSON.stringify({
-          parentId: "child-id",
-        }),
-      });
+      const circularRequest = new NextRequest(
+        "http://localhost:3000/api/v1/directories/parent-id",
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            parentId: "child-id",
+          }),
+        },
+      );
 
       const circularResponse = await updateDir(circularRequest, {
-        params: Promise.resolve({ id: "parent-id" }),
+        params: Promise.resolve({id: "parent-id"}),
       });
       const errorData = await circularResponse.json();
 
@@ -398,15 +413,25 @@ describe("File and Directory Management Integration", () => {
 
     it("should handle recursive directory listing with filtering", async () => {
       const mockDirectories = [
-        { id: "1", fullPath: "/docs", _count: { files: 2, children: 1 }, parent: null },
-        { id: "2", fullPath: "/docs/api", _count: { files: 5, children: 0 }, parent: { id: "1", fullPath: "/docs" } },
-        { id: "3", fullPath: "/docs/guides", _count: { files: 3, children: 2 }, parent: { id: "1", fullPath: "/docs" } },
+        {id: "1", fullPath: "/docs", _count: {files: 2, children: 1}, parent: null},
+        {
+          id: "2",
+          fullPath: "/docs/api",
+          _count: {files: 5, children: 0},
+          parent: {id: "1", fullPath: "/docs"},
+        },
+        {
+          id: "3",
+          fullPath: "/docs/guides",
+          _count: {files: 3, children: 2},
+          parent: {id: "1", fullPath: "/docs"},
+        },
       ];
 
       (prisma.directory.findMany as jest.Mock).mockResolvedValue(mockDirectories);
 
       const listRequest = new NextRequest(
-        "http://localhost:3000/api/v1/directories?path=/docs&recursive=true"
+        "http://localhost:3000/api/v1/directories?path=/docs&recursive=true",
       );
       const listResponse = await getDirs(listRequest);
       const listedDirs = await listResponse.json();
@@ -418,9 +443,9 @@ describe("File and Directory Management Integration", () => {
         expect.objectContaining({
           where: expect.objectContaining({
             userId: mockUser,
-            fullPath: { startsWith: "/docs/" },
+            fullPath: {startsWith: "/docs/"},
           }),
-        })
+        }),
       );
     });
   });
@@ -428,7 +453,7 @@ describe("File and Directory Management Integration", () => {
   describe("Error Handling and Edge Cases", () => {
     it("should handle database connection failures gracefully", async () => {
       (prisma.directory.findMany as jest.Mock).mockRejectedValue(
-        new Error("Database connection failed")
+        new Error("Database connection failed"),
       );
 
       const request = new NextRequest("http://localhost:3000/api/v1/directories");
@@ -461,7 +486,7 @@ describe("File and Directory Management Integration", () => {
       const directory = {
         id: "concurrent-dir",
         fullPath: "/concurrent",
-        _count: { files: 0, children: 0 },
+        _count: {files: 0, children: 0},
       };
 
       // Simulate concurrent update operations
@@ -473,18 +498,21 @@ describe("File and Directory Management Integration", () => {
           // Simulate optimistic locking failure on first attempt
           throw new Error("Record version mismatch");
         }
-        return { ...directory, updatedAt: new Date() };
+        return {...directory, updatedAt: new Date()};
       });
 
-      const updateRequest = new NextRequest("http://localhost:3000/api/v1/directories/concurrent-dir", {
-        method: "PUT",
-        body: JSON.stringify({
-          defaultPermissions: "public",
-        }),
-      });
+      const updateRequest = new NextRequest(
+        "http://localhost:3000/api/v1/directories/concurrent-dir",
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            defaultPermissions: "public",
+          }),
+        },
+      );
 
       const response = await updateDir(updateRequest, {
-        params: Promise.resolve({ id: "concurrent-dir" }),
+        params: Promise.resolve({id: "concurrent-dir"}),
       });
 
       expect(response.status).toBe(500); // Should handle the error
@@ -520,7 +548,7 @@ describe("File and Directory Management Integration", () => {
       });
 
       const response = await deleteFile(deleteRequest, {
-        params: Promise.resolve({ id: "cleanup-test" }),
+        params: Promise.resolve({id: "cleanup-test"}),
       });
       const data = await response.json();
 
@@ -532,10 +560,10 @@ describe("File and Directory Management Integration", () => {
 
   describe("Performance and Scalability", () => {
     it("should handle large directory listings efficiently", async () => {
-      const largeDirectoryList = Array.from({ length: 1000 }, (_, i) => ({
+      const largeDirectoryList = Array.from({length: 1000}, (_, i) => ({
         id: `dir-${i}`,
         fullPath: `/large-test/dir-${i}`,
-        _count: { files: i % 10, children: i % 5 },
+        _count: {files: i % 10, children: i % 5},
         parent: null,
         defaultPermissions: "private",
         defaultExpirationPolicy: "infinite",
@@ -557,7 +585,7 @@ describe("File and Directory Management Integration", () => {
     });
 
     it("should handle bulk file operations with batching", async () => {
-      const bulkFiles = Array.from({ length: 100 }, (_, i) => ({
+      const bulkFiles = Array.from({length: 100}, (_, i) => ({
         id: `bulk-file-${i}`,
         filename: `file-${i}.txt`,
         directoryId: "bulk-dir",
@@ -568,9 +596,9 @@ describe("File and Directory Management Integration", () => {
       (prisma.directory.findFirst as jest.Mock).mockResolvedValue({
         id: "bulk-dir",
         files: bulkFiles,
-        _count: { children: 0 },
+        _count: {children: 0},
       });
-      (prisma.file.deleteMany as jest.Mock).mockResolvedValue({ count: 100 });
+      (prisma.file.deleteMany as jest.Mock).mockResolvedValue({count: 100});
       (prisma.directory.delete as jest.Mock).mockResolvedValue({
         id: "bulk-dir",
       });
@@ -580,7 +608,7 @@ describe("File and Directory Management Integration", () => {
       });
 
       const response = await deleteDir(deleteRequest, {
-        params: Promise.resolve({ id: "bulk-dir" }),
+        params: Promise.resolve({id: "bulk-dir"}),
       });
       const data = await response.json();
 

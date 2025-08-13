@@ -12,7 +12,7 @@ export async function PUT(request: NextRequest, {params}: {params: Promise<{id: 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let session: any;
   const {id} = await params;
-  
+
   try {
     session = await auth();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
