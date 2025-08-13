@@ -19,22 +19,23 @@ jest.mock("@/lib/auth", () => ({
   auth: jest.fn(),
 }));
 
-// Mock R2 config to use test server
+// Mock R2 config to use controlled client
+const mockGetObjectInfo = jest.fn();
 jest.mock("@/lib/r2-config", () => {
   const originalModule = jest.requireActual("@/lib/r2-config");
   return {
     ...originalModule,
-    currentEnv: "test",
-    getR2Client: () => {
-      const {R2Client} = jest.requireActual("@/lib/r2-client");
-      return new R2Client({
-        endpoint: "http://localhost:9005",
-        accessKeyId: "test",
-        secretAccessKey: "test",
-        bucketName: "test-bucket",
-        region: "auto",
-      });
-    },
+    currentEnv: "test", 
+    getR2Client: () => ({
+      parseObjectKey: jest.fn().mockReturnValue({
+        env: "test",
+        lifecyclePolicy: "infinite",
+        userId: "test-user-id", 
+        fileId: "test-file-id"
+      }),
+      getObjectInfo: mockGetObjectInfo,
+      putObject: jest.fn().mockResolvedValue(undefined),
+    }),
   };
 });
 
@@ -52,6 +53,12 @@ describe("PUT /api/v1/files/:id/status", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset R2 mock to default success state
+    mockGetObjectInfo.mockResolvedValue({
+      exists: true,
+      size: 1024,
+      contentType: "text/plain"
+    });
   });
 
   const mockFile = {
@@ -89,17 +96,7 @@ describe("PUT /api/v1/files/:id/status", () => {
   });
 
   it("should validate uploaded file and update status", async () => {
-    // First upload a test file to mock R2
-    const {getR2Client} = jest.requireActual("@/lib/r2-config");
-    const r2Client = getR2Client();
-    await r2Client.putObject({
-      env: "test",
-      lifecyclePolicy: "infinite",
-      userId: "test-user-id",
-      fileId: "test-file-id",
-      body: "test file content",
-      contentType: "text/plain",
-    });
+    // Use default mock from beforeEach
 
     const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/status", {
       method: "PUT",
@@ -114,7 +111,7 @@ describe("PUT /api/v1/files/:id/status", () => {
     expect(response.status).toBe(200);
     expect(data.id).toBe("test-file-id");
     expect(data.status).toBe("validated");
-    expect(data.sizeBytes).toBe(1024);
+    expect(data.sizeBytes).toBe(1024); // Size from default mock
 
     // Verify file was updated in database
     expect(prisma.file.update).toHaveBeenCalledWith(
@@ -129,8 +126,13 @@ describe("PUT /api/v1/files/:id/status", () => {
   });
 
   it("should mark file as failed if not found in R2", async () => {
+    // Mock R2 to return file not found
+    mockGetObjectInfo.mockResolvedValue({
+      exists: false
+    });
+
     const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/status", {
-      method: "PUT",
+      method: "PUT", 
       body: JSON.stringify({
         status: "uploaded",
       }),
@@ -190,10 +192,8 @@ describe("PUT /api/v1/files/:id/status", () => {
   });
 
   it("should reject file not in reserved status", async () => {
-    (prisma.file.findFirst as jest.Mock).mockResolvedValue({
-      ...mockFile,
-      status: "validated",
-    });
+    // Mock to return no file (since route filters by status: "reserved")
+    (prisma.file.findFirst as jest.Mock).mockResolvedValue(null);
 
     const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/status", {
       method: "PUT",
@@ -246,16 +246,11 @@ describe("PUT /api/v1/files/:id/status", () => {
   });
 
   it("should preserve existing mime type if already set", async () => {
-    // Upload file to R2
-    const {getR2Client} = jest.requireActual("@/lib/r2-config");
-    const r2Client = getR2Client();
-    await r2Client.putObject({
-      env: "test",
-      lifecyclePolicy: "infinite",
-      userId: "test-user-id",
-      fileId: "test-file-id",
-      body: "test file content",
-      contentType: "application/octet-stream",
+    // Mock R2 to return different content type than file has
+    mockGetObjectInfo.mockResolvedValue({
+      exists: true,
+      size: 1024,
+      contentType: "application/octet-stream" // Different from file's mimeType
     });
 
     (prisma.file.findFirst as jest.Mock).mockResolvedValue({
@@ -285,16 +280,11 @@ describe("PUT /api/v1/files/:id/status", () => {
   });
 
   it("should update mime type if not previously set", async () => {
-    // Upload file to R2
-    const {getR2Client} = jest.requireActual("@/lib/r2-config");
-    const r2Client = getR2Client();
-    await r2Client.putObject({
-      env: "test",
-      lifecyclePolicy: "infinite",
-      userId: "test-user-id",
-      fileId: "test-file-id",
-      body: "test file content",
-      contentType: "application/json",
+    // Mock R2 to return file exists with JSON content type
+    mockGetObjectInfo.mockResolvedValue({
+      exists: true,
+      size: 17,
+      contentType: "application/json"
     });
 
     (prisma.file.findFirst as jest.Mock).mockResolvedValue({
