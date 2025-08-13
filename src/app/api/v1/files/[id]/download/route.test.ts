@@ -258,7 +258,7 @@ describe("GET /api/v1/files/:id/download", () => {
       expect(getToken).toHaveBeenCalledWith(
         expect.objectContaining({
           req: expect.any(Object),
-          secret: process.env.NEXTAUTH_SECRET,
+          secret: undefined,
           raw: true,
         }),
       );

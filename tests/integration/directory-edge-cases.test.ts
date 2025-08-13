@@ -98,6 +98,12 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       const mockDir = {
         id: "long-path-id",
         fullPath: longPath,
+        parentId: null,
+        userId: mockUser,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: mockDate,
+        updatedAt: mockDate,
         _count: {files: 0, children: 0},
       };
 
@@ -146,6 +152,12 @@ describe("Directory Edge Cases and Boundary Tests", () => {
         const mockDir = {
           id: `special-${Math.random()}`,
           fullPath: path,
+          parentId: null,
+          userId: mockUser,
+          defaultPermissions: "private",
+          defaultExpirationPolicy: "infinite",
+          createdAt: mockDate,
+          updatedAt: mockDate,
           _count: {files: 0, children: 0},
         };
 
@@ -242,25 +254,35 @@ describe("Directory Edge Cases and Boundary Tests", () => {
 
       (prisma.directory.upsert as jest.Mock).mockImplementation(() => {
         creationCount++;
+        const baseDir = {
+          id: "first-creation",
+          fullPath: conflictPath,
+          parentId: null,
+          userId: mockUser,
+          defaultPermissions: "private",
+          defaultExpirationPolicy: "infinite",
+          createdAt: mockDate,
+          updatedAt: mockDate,
+          _count: {files: 0, children: 0},
+        };
+        
         if (creationCount === 1) {
-          return Promise.resolve({
-            id: "first-creation",
-            fullPath: conflictPath,
-            _count: {files: 0, children: 0},
-          });
+          return Promise.resolve(baseDir);
         } else {
           // Simulate second request finding existing directory
-          return Promise.resolve({
-            id: "first-creation", // Same ID as first creation
-            fullPath: conflictPath,
-            _count: {files: 0, children: 0},
-          });
+          return Promise.resolve(baseDir);
         }
       });
 
       (prisma.directory.findUnique as jest.Mock).mockResolvedValue({
         id: "first-creation",
         fullPath: conflictPath,
+        parentId: null,
+        userId: mockUser,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: mockDate,
+        updatedAt: mockDate,
         _count: {files: 0, children: 0},
       });
 
@@ -293,6 +315,12 @@ describe("Directory Edge Cases and Boundary Tests", () => {
       const originalDir = {
         id: "concurrent-rename",
         fullPath: "/original/path",
+        parentId: null,
+        userId: mockUser,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        createdAt: mockDate,
+        updatedAt: mockDate,
         files: [],
         children: [],
         _count: {files: 0, children: 0},

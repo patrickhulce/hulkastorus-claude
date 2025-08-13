@@ -134,8 +134,9 @@ describe("File API Comprehensive Tests", () => {
       const response = await GET(request, {params: Promise.resolve({id: "test-file-id"})});
       const data = await response.json();
 
-      expect(response.status).toBe(401);
-      expect(data.error).toBe("Unauthorized");
+      // Private files return 404 for unauthorized users to avoid leaking info
+      expect(response.status).toBe(404);
+      expect(data.error).toBe("File not found");
     });
 
     it("should handle private files accessed by non-owner", async () => {
