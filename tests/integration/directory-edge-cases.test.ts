@@ -265,7 +265,7 @@ describe("Directory Edge Cases and Boundary Tests", () => {
           updatedAt: mockDate,
           _count: {files: 0, children: 0},
         };
-        
+
         if (creationCount === 1) {
           return Promise.resolve(baseDir);
         } else {
