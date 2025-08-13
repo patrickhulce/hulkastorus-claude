@@ -84,7 +84,8 @@ describe("/api/v1/files/:id", () => {
     },
     user: {
       id: "test-user-id",
-      name: "Test User",
+      firstName: "Test",
+      lastName: "User",
     },
   };
 

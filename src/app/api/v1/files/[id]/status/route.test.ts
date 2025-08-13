@@ -25,13 +25,13 @@ jest.mock("@/lib/r2-config", () => {
   const originalModule = jest.requireActual("@/lib/r2-config");
   return {
     ...originalModule,
-    currentEnv: "test", 
+    currentEnv: "test",
     getR2Client: () => ({
       parseObjectKey: jest.fn().mockReturnValue({
         env: "test",
         lifecyclePolicy: "infinite",
-        userId: "test-user-id", 
-        fileId: "test-file-id"
+        userId: "test-user-id",
+        fileId: "test-file-id",
       }),
       getObjectInfo: mockGetObjectInfo,
       putObject: jest.fn().mockResolvedValue(undefined),
@@ -57,7 +57,7 @@ describe("PUT /api/v1/files/:id/status", () => {
     mockGetObjectInfo.mockResolvedValue({
       exists: true,
       size: 1024,
-      contentType: "text/plain"
+      contentType: "text/plain",
     });
   });
 
@@ -128,11 +128,11 @@ describe("PUT /api/v1/files/:id/status", () => {
   it("should mark file as failed if not found in R2", async () => {
     // Mock R2 to return file not found
     mockGetObjectInfo.mockResolvedValue({
-      exists: false
+      exists: false,
     });
 
     const request = new NextRequest("http://localhost:3000/api/v1/files/test-file-id/status", {
-      method: "PUT", 
+      method: "PUT",
       body: JSON.stringify({
         status: "uploaded",
       }),
@@ -250,7 +250,7 @@ describe("PUT /api/v1/files/:id/status", () => {
     mockGetObjectInfo.mockResolvedValue({
       exists: true,
       size: 1024,
-      contentType: "application/octet-stream" // Different from file's mimeType
+      contentType: "application/octet-stream", // Different from file's mimeType
     });
 
     (prisma.file.findFirst as jest.Mock).mockResolvedValue({
@@ -284,7 +284,7 @@ describe("PUT /api/v1/files/:id/status", () => {
     mockGetObjectInfo.mockResolvedValue({
       exists: true,
       size: 17,
-      contentType: "application/json"
+      contentType: "application/json",
     });
 
     (prisma.file.findFirst as jest.Mock).mockResolvedValue({

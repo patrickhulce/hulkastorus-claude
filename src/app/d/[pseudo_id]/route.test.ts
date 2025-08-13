@@ -259,6 +259,7 @@ describe("GET /d/:pseudo_id", () => {
   describe("Download tokens", () => {
     it("should handle download token parameter", async () => {
       // Mock auth to return no session (needed for getToken to be called)
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const auth = jest.mocked(require("@/lib/auth").auth);
       auth.mockResolvedValue(null);
 

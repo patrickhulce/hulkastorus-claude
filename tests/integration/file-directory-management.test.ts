@@ -34,6 +34,9 @@ jest.mock("@/lib/prisma", () => ({
       delete: jest.fn(),
       deleteMany: jest.fn(),
     },
+    user: {
+      findUnique: jest.fn(),
+    },
     $executeRawUnsafe: jest.fn(),
     $transaction: jest.fn(),
   },
@@ -44,22 +47,20 @@ jest.mock("@/lib/auth", () => ({
   auth: jest.fn(),
 }));
 
-// Mock R2 config to use test server
+// Mock R2 config to use mock client
 jest.mock("@/lib/r2-config", () => {
   const originalModule = jest.requireActual("@/lib/r2-config");
   return {
     ...originalModule,
     currentEnv: "test",
-    getR2Client: () => {
-      const {R2Client} = jest.requireActual("@/lib/r2-client");
-      return new R2Client({
-        endpoint: "http://localhost:9020",
-        accessKeyId: "test",
-        secretAccessKey: "test",
-        bucketName: "test-bucket",
-        region: "auto",
-      });
-    },
+    parseLifecyclePolicy: jest.fn().mockReturnValue("infinite"),
+    getR2Client: () => ({
+      getUploadUrl: jest.fn().mockResolvedValue({
+        uploadUrl: "http://localhost:9020/upload",
+        objectKey: "test/infinite/test-user-id/test-file-id",
+      }),
+      deleteObject: jest.fn().mockResolvedValue(undefined),
+    }),
   };
 });
 
@@ -85,6 +86,12 @@ describe("File and Directory Management Integration", () => {
     auth.mockResolvedValue({
       user: {id: "test-user-id"},
     });
+
+    // Mock user lookup for file operations
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+      id: "test-user-id",
+      isEmailVerified: true,
+    });
   });
 
   const mockUser = "test-user-id";
@@ -105,8 +112,20 @@ describe("File and Directory Management Integration", () => {
         _count: {files: 0, children: 0},
       };
 
-      const mockParentDir = {id: "parent-dir-id", fullPath: "/projects"};
-      const mockSubDir = {id: "sub-dir-id", fullPath: "/projects/2024"};
+      const mockParentDir = {
+        id: "parent-dir-id",
+        fullPath: "/projects",
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        _count: {files: 0, children: 0},
+      };
+      const mockSubDir = {
+        id: "sub-dir-id",
+        fullPath: "/projects/2024",
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        _count: {files: 0, children: 0},
+      };
 
       (prisma.directory.upsert as jest.Mock)
         .mockResolvedValueOnce(mockParentDir)
@@ -149,7 +168,26 @@ describe("File and Directory Management Integration", () => {
       };
 
       (prisma.file.create as jest.Mock).mockResolvedValue(mockFile);
-      (prisma.directory.findFirst as jest.Mock).mockResolvedValue(mockDirectory);
+      (prisma.file.update as jest.Mock).mockResolvedValue({
+        ...mockFile,
+        r2Locator: "test/infinite/test-user-id/test-file-id",
+      });
+
+      // Mock directory structure creation for file upload
+      (prisma.directory.upsert as jest.Mock)
+        .mockResolvedValueOnce({
+          id: "projects-dir",
+          fullPath: "/projects",
+          createdAt: mockDate,
+          updatedAt: mockDate,
+        })
+        .mockResolvedValueOnce({
+          id: "2024-dir",
+          fullPath: "/projects/2024",
+          createdAt: mockDate,
+          updatedAt: mockDate,
+        })
+        .mockResolvedValueOnce(mockDirectory);
 
       const uploadRequest = new NextRequest("http://localhost:3000/api/v1/files", {
         method: "POST",
@@ -157,7 +195,7 @@ describe("File and Directory Management Integration", () => {
           filename: "report.pdf",
           mimeType: "application/pdf",
           sizeBytes: 1024,
-          directoryId: "root-dir-id",
+          fullPath: "/projects/2024/documents/report.pdf",
           permissions: "private",
           expirationPolicy: "30d",
         }),
@@ -166,9 +204,9 @@ describe("File and Directory Management Integration", () => {
       const uploadResponse = await createFile(uploadRequest);
       const createdFile = await uploadResponse.json();
 
-      expect(uploadResponse.status).toBe(201);
+      expect(uploadResponse.status).toBe(200);
       expect(createdFile.filename).toBe("report.pdf");
-      expect(createdFile.directoryId).toBe("root-dir-id");
+      expect(createdFile.fullPath).toBe("/projects/2024/documents/report.pdf");
 
       // Step 3: Update file properties
       const updatedFile = {
@@ -349,6 +387,8 @@ describe("File and Directory Management Integration", () => {
         files: [{id: "file1", fullPath: "/projects/old-name/file1.txt"}],
         children: [{id: "child1", fullPath: "/projects/old-name/subdir"}],
         _count: {files: 1, children: 1},
+        createdAt: mockDate,
+        updatedAt: mockDate,
       };
 
       (prisma.directory.findFirst as jest.Mock)
@@ -359,6 +399,8 @@ describe("File and Directory Management Integration", () => {
         ...rootDir,
         fullPath: "/projects/new-name",
         _count: {files: 1, children: 1},
+        createdAt: mockDate,
+        updatedAt: mockDate,
       });
 
       const renameRequest = new NextRequest("http://localhost:3000/api/v1/directories/root-id", {
@@ -382,10 +424,14 @@ describe("File and Directory Management Integration", () => {
       const parentDir = {
         id: "parent-id",
         fullPath: "/parent",
+        createdAt: mockDate,
+        updatedAt: mockDate,
       };
       const childDir = {
         id: "child-id",
         fullPath: "/parent/child/grandchild",
+        createdAt: mockDate,
+        updatedAt: mockDate,
       };
 
       (prisma.directory.findFirst as jest.Mock)
@@ -413,18 +459,35 @@ describe("File and Directory Management Integration", () => {
 
     it("should handle recursive directory listing with filtering", async () => {
       const mockDirectories = [
-        {id: "1", fullPath: "/docs", _count: {files: 2, children: 1}, parent: null},
+        {
+          id: "1",
+          fullPath: "/docs",
+          _count: {files: 2, children: 1},
+          parent: null,
+          createdAt: mockDate,
+          updatedAt: mockDate,
+          defaultPermissions: "private",
+          defaultExpirationPolicy: "infinite",
+        },
         {
           id: "2",
           fullPath: "/docs/api",
           _count: {files: 5, children: 0},
           parent: {id: "1", fullPath: "/docs"},
+          createdAt: mockDate,
+          updatedAt: mockDate,
+          defaultPermissions: "private",
+          defaultExpirationPolicy: "infinite",
         },
         {
           id: "3",
           fullPath: "/docs/guides",
           _count: {files: 3, children: 2},
           parent: {id: "1", fullPath: "/docs"},
+          createdAt: mockDate,
+          updatedAt: mockDate,
+          defaultPermissions: "private",
+          defaultExpirationPolicy: "infinite",
         },
       ];
 
@@ -487,6 +550,10 @@ describe("File and Directory Management Integration", () => {
         id: "concurrent-dir",
         fullPath: "/concurrent",
         _count: {files: 0, children: 0},
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
       };
 
       // Simulate concurrent update operations
@@ -519,6 +586,44 @@ describe("File and Directory Management Integration", () => {
     });
 
     it("should validate file path traversal attempts", async () => {
+      const normalizedDir = {
+        id: "normalized-dir",
+        fullPath: "/etc/passwd",
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        _count: {files: 0, children: 0},
+        userId: mockUser,
+        parentId: "etc-dir",
+      };
+
+      const etcDir = {
+        id: "etc-dir",
+        fullPath: "/etc",
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
+        _count: {files: 0, children: 0},
+        userId: mockUser,
+        parentId: null,
+      };
+
+      // Reset mocks for this specific test
+      jest.clearAllMocks();
+
+      // Setup auth mock again
+      const auth = jest.mocked(require("@/lib/auth").auth);
+      auth.mockResolvedValue({
+        user: {id: "test-user-id"},
+      });
+
+      (prisma.directory.upsert as jest.Mock)
+        .mockResolvedValueOnce(etcDir)
+        .mockResolvedValueOnce(normalizedDir);
+      (prisma.directory.findUnique as jest.Mock).mockResolvedValue(normalizedDir);
+
       const maliciousRequest = new NextRequest("http://localhost:3000/api/v1/directories", {
         method: "POST",
         body: JSON.stringify({
@@ -597,6 +702,10 @@ describe("File and Directory Management Integration", () => {
         id: "bulk-dir",
         files: bulkFiles,
         _count: {children: 0},
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        defaultPermissions: "private",
+        defaultExpirationPolicy: "infinite",
       });
       (prisma.file.deleteMany as jest.Mock).mockResolvedValue({count: 100});
       (prisma.directory.delete as jest.Mock).mockResolvedValue({
