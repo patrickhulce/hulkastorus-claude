@@ -14,8 +14,10 @@
       "Bash(npm test)",
       "Bash(grep:*)",
       "Bash(npm test:*)",
-      "Bash(npx jest:*)"
+      "Bash(npx jest:*)",
+      "Bash(npx shadcn@latest add:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

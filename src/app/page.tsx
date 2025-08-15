@@ -1,123 +1,242 @@
+import Link from "next/link";
+import {TopNavbar} from "@/components/navbar/navbar";
+import {TabbedCodeBlock} from "@/components/code-block/tabbed-code-block";
+import {Button} from "@/components/ui/button";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Zap, KeyRound, Package} from "lucide-react";
+
 export default function Home() {
+  const codeExamples = [
+    {
+      label: "Bash",
+      code: `$ hulk put model.ckpt
+https://hulk.st/or.us/abc123
+— copied to clipboard ✅`,
+    },
+    {
+      label: "Python",
+      code: `import hulkastorus as hulk
+
+# Upload a model
+url = hulk.upload("model.ckpt")
+print(f"Shared at: {url}")
+# https://hulk.st/or.us/abc123`,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      <nav className="flex justify-between items-center px-8 py-4 border-b border-gray-800">
-        <div className="text-xl font-bold">Hulkastorus</div>
-        <div className="flex gap-6 items-center">
-          <a href="/docs" className="hover:text-gray-300">
-            Docs
-          </a>
-          <a href="#pricing" className="hover:text-gray-300">
-            Pricing
-          </a>
-          <a href="/login" className="hover:text-gray-300">
-            Login
-          </a>
-          <a
-            href="mailto:invites@hulkastor.us"
-            className="bg-white text-black px-4 py-2 rounded-md hover:bg-gray-200"
-          >
-            Request Invite
-          </a>
-        </div>
-      </nav>
+    <div className="min-h-screen">
+      <TopNavbar />
 
-      <div className="container mx-auto px-8">
-        <section className="flex flex-col items-center justify-center h-[40vh] text-center">
-          <h1 className="text-5xl font-bold mb-4">Hulkastorus</h1>
-          <p className="text-xl text-gray-300 mb-8">
-            Simple file storage and sharing without the overhead
+      {/* Hero Section */}
+      <section className="relative overflow-hidden border-b border-border">
+        <div className="container mx-auto px-4 py-24 text-center">
+          <h1 className="mb-6 text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Dev-Friendly Cloud
+            <br />
+            Storage, Hulk-Strong.
+          </h1>
+          <p className="mb-8 text-lg text-muted-foreground max-w-2xl mx-auto">
+            Instant public URLs & frictionless CLI / Python uploads — minus the SDK bloat.
           </p>
-          <div className="flex gap-4">
-            <a
-              href="mailto:invites@hulkastor.us"
-              className="bg-white text-black px-6 py-3 rounded-md hover:bg-gray-200"
-            >
-              Request Invite
-            </a>
-            <a href="/docs" className="border border-white px-6 py-3 rounded-md hover:bg-gray-900">
-              Read the Docs
-            </a>
+          <div className="flex gap-4 justify-center">
+            <Button size="lg" asChild>
+              <Link href="/register">Request an Invite</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/docs">Read the Docs</Link>
+            </Button>
           </div>
-        </section>
+        </div>
+        <div className="absolute inset-0 -z-10 opacity-10">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[40rem] rotate-12">
+            🦖
+          </div>
+        </div>
+      </section>
 
-        <section className="grid md:grid-cols-3 gap-8 py-16">
-          <div className="p-6 border border-gray-800 rounded-lg">
-            <h3 className="text-xl font-semibold mb-2">No Complexity</h3>
-            <p className="text-gray-400">
-              Drag, drop, and get a link. No buckets, regions, or complex SDKs to configure.
-            </p>
-          </div>
-          <div className="p-6 border border-gray-800 rounded-lg">
-            <h3 className="text-xl font-semibold mb-2">Developer Friendly</h3>
-            <p className="text-gray-400">
-              Simple REST API with two endpoints. Perfect for CI/CD pipelines and automation.
-            </p>
-          </div>
-          <div className="p-6 border border-gray-800 rounded-lg">
-            <h3 className="text-xl font-semibold mb-2">Fast & Reliable</h3>
-            <p className="text-gray-400">
-              Powered by Cloudflare R2 for global performance and reliability.
-            </p>
-          </div>
-        </section>
-
-        <section className="py-16">
-          <h2 className="text-3xl font-bold mb-8 text-center">Simple API</h2>
-          <div className="bg-gray-900 p-6 rounded-lg">
-            <pre className="text-green-400">
-              <code>{`# Upload a file
-curl -X POST https://api.hulkastor.us/files \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -F "file=@database.sqlite"
-
-# Download a file  
-curl https://hulkastor.us/files/abc123`}</code>
-            </pre>
-          </div>
-        </section>
-
-        <section className="py-16">
-          <h2 className="text-3xl font-bold mb-8 text-center">Trusted By</h2>
-          <div className="flex justify-center gap-12 opacity-50">
-            <div className="text-2xl">Hooli</div>
-            <div className="text-2xl">Pied Piper</div>
-            <div className="text-2xl">Enron</div>
-            <div className="text-2xl">Theranos</div>
-          </div>
-        </section>
-
-        <section id="pricing" className="py-16">
-          <h2 className="text-3xl font-bold mb-8 text-center">Pricing</h2>
+      {/* Three Feature Cards */}
+      <section className="border-b border-border">
+        <div className="container mx-auto px-4 py-16">
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="border border-gray-800 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Free</h3>
-              <p className="text-3xl font-bold mb-4">$0</p>
-              <p className="text-gray-400">Free during beta</p>
+            <Card>
+              <CardHeader>
+                <Zap className="h-8 w-8 text-primary mb-2" />
+                <CardTitle>One-Command Share</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Ship files at Raptor speed;{" "}
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">hulk put ★</code> → link
+                  auto-copied & posted to Slack
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <KeyRound className="h-8 w-8 text-primary mb-2" />
+                <CardTitle>Keyless Auth Flow</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Works with GitHub SSO / cloud IAM; zero keys in CI
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <Package className="h-8 w-8 text-primary mb-2" />
+                <CardTitle>ML-Asset Ready</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Multipart, resumable uploads; content-addressed caching; MD5 + SHA-256 integrity
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Code Snippet and Testimonial */}
+      <section className="border-b border-border">
+        <div className="container mx-auto px-4 py-16">
+          <div className="grid md:grid-cols-2 gap-12">
+            <div>
+              <h2 className="text-2xl font-bold mb-6">Simple as it gets</h2>
+              <TabbedCodeBlock examples={codeExamples} defaultTab="Bash" />
             </div>
-            <div className="border border-gray-800 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Pro</h3>
-              <p className="text-3xl font-bold mb-4">$0</p>
-              <p className="text-gray-400">Free during beta</p>
-            </div>
-            <div className="border border-gray-800 rounded-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Tres Commas</h3>
-              <p className="text-3xl font-bold mb-4">$0</p>
-              <p className="text-gray-400">Free during beta</p>
+
+            <div className="flex flex-col justify-center">
+              <Card className="bg-accent/50">
+                <CardContent className="pt-6">
+                  <p className="text-lg italic mb-4">
+                    &ldquo;We swapped S3 presign dance for Hulkastorus in an afternoon. Links just
+                    work.&rdquo;
+                  </p>
+                  <p className="text-sm text-muted-foreground">— ML Infra Lead, VFX Co.</p>
+                </CardContent>
+              </Card>
+              <div className="mt-6 text-center">
+                <Button size="lg" asChild>
+                  <Link href="/register">Request Early Access</Link>
+                </Button>
+              </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      <footer className="border-t border-gray-800 py-8 mt-16">
-        <div className="container mx-auto px-8 flex justify-center gap-8 text-gray-400">
-          <span>© 2024 Hulkastorus</span>
-          <a href="/privacy" className="hover:text-white">
-            Privacy
-          </a>
-          <a href="/terms" className="hover:text-white">
-            Terms
-          </a>
+      {/* Logo Carousel */}
+      <section className="border-b border-border py-12 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-sm text-muted-foreground mb-8">
+            TRUSTED BY INNOVATIVE TEAMS
+          </p>
+          <div className="flex justify-center items-center gap-12 opacity-50">
+            <div className="text-2xl font-bold">Hooli</div>
+            <div className="text-2xl">◈</div>
+            <div className="text-2xl font-bold">Pied Piper</div>
+            <div className="text-2xl">◈</div>
+            <div className="text-2xl font-bold">Enron</div>
+            <div className="text-2xl">◈</div>
+            <div className="text-2xl font-bold">Theranos</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Comparison */}
+      <section id="pricing" className="border-b border-border">
+        <div className="container mx-auto px-4 py-16">
+          <h2 className="text-3xl font-bold text-center mb-12">Simple, transparent pricing</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full max-w-4xl mx-auto">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left p-4">Plan</th>
+                  <th className="text-center p-4">Free</th>
+                  <th className="text-center p-4">Pro</th>
+                  <th className="text-center p-4">Tres Commas</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border">
+                  <td className="p-4 text-muted-foreground">Monthly cost</td>
+                  <td className="p-4 text-center font-bold">
+                    $0 <span className="text-sm text-muted-foreground">(beta)</span>
+                  </td>
+                  <td className="p-4 text-center font-bold">
+                    $0 <span className="text-sm text-muted-foreground">(beta)</span>
+                  </td>
+                  <td className="p-4 text-center font-bold">
+                    $0 <span className="text-sm text-muted-foreground">(beta)</span>
+                  </td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="p-4 text-muted-foreground">Storage cap</td>
+                  <td className="p-4 text-center">10 GB</td>
+                  <td className="p-4 text-center">1 TB</td>
+                  <td className="p-4 text-center">Unlimited</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="p-4 text-muted-foreground">Bandwidth</td>
+                  <td className="p-4 text-center">50 GB/mo</td>
+                  <td className="p-4 text-center">1 TB/mo</td>
+                  <td className="p-4 text-center">Unlimited</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="p-4 text-muted-foreground">Support</td>
+                  <td className="p-4 text-center">Community</td>
+                  <td className="p-4 text-center">24 h SLA</td>
+                  <td className="p-4 text-center">Dedicated TAM</td>
+                </tr>
+                <tr>
+                  <td className="p-4"></td>
+                  <td className="p-4 text-center">
+                    <Button variant="outline" asChild>
+                      <Link href="/register">Get Free</Link>
+                    </Button>
+                  </td>
+                  <td className="p-4 text-center">
+                    <Button asChild>
+                      <Link href="/register">Join Waitlist</Link>
+                    </Button>
+                  </td>
+                  <td className="p-4 text-center">
+                    <Button variant="outline" asChild>
+                      <Link href="mailto:sales@hulkastor.us">Contact Sales</Link>
+                    </Button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center items-center gap-6 text-sm text-muted-foreground">
+            <span>© 2025 Hulkastorus</span>
+            <span>•</span>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">
+              Privacy
+            </Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-foreground transition-colors">
+              Terms
+            </Link>
+            <span>•</span>
+            <Link
+              href="https://twitter.com/hulkastorus"
+              className="hover:text-foreground transition-colors"
+            >
+              Twitter
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
